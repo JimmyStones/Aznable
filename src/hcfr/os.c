@@ -20,7 +20,6 @@
 ===========================================================================*/
 #include "../shared/sys.h"
 #include "../shared/ui.h"
-#include "../shared/tilemap.h"
 #include "hcfr_data.h"
 
 // DPAD tracker
@@ -242,17 +241,6 @@ void app_main()
 	set_char_palette(22, 0, 67, 252);	// Dark blue
 
 	start_mode_menu();
-
-	tilemap_offset_x = 0;
-	tilemap_offset_y = 0;
-	update_tilemap_offset();
-	unsigned char y = 2;
-	unsigned short p = (y * 32) + 2;
-	for (unsigned char x = 0; x < 16; x++)
-	{
-		tilemapram[p] = x;
-		p++;
-	}
 
 	while (1)
 	{

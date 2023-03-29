@@ -119,7 +119,7 @@ localparam TM_CLEAR_DONE = 2;
 // Tilemap clear control
 reg [2:0]	tilemap_clear_state;
 
-`define TM_DEBUG
+//`define TM_DEBUG
 
 always @(posedge clk) begin
 	reg hblank_last;
