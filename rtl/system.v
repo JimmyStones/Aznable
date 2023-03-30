@@ -69,8 +69,10 @@ module system (
 	output	[15:0]	AUDIO_R
 );
 
-localparam [8:0] VGA_WIDTH = 9'd320;
-localparam [8:0] VGA_HEIGHT = 9'd240;
+localparam [8:0] VGA_VISIBLE_WIDTH = 9'd320;
+localparam [8:0] VGA_HB_END = 9'd381;
+localparam [8:0] VGA_VISIBLE_HEIGHT = 9'd240;
+localparam [8:0] VGA_VB_END = 9'd262;
 
 wire _hb;
 wire _vb;
@@ -82,8 +84,10 @@ wire [8:0] vcnt;
 
 // Display timing module from JTFRAME
 jtframe_vtimer #(
-	.HB_START(VGA_WIDTH - 1'b1),
-	.VB_START(VGA_HEIGHT - 1'b1)
+	.HB_START(VGA_VISIBLE_WIDTH - 1'b1),
+	.HB_END(VGA_HB_END - 1'b1),
+	.VB_START(VGA_VISIBLE_HEIGHT - 1'b1),
+	.VB_END(VGA_VB_END - 1'b1)
 ) vtimer 
 (
 	.clk(clk_24),
