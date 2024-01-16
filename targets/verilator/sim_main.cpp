@@ -337,10 +337,6 @@ int main(int argc, char** argv, char** env) {
 		//ImGui::Begin("Sound ROM");
 		//mem_edit.DrawContents(&top->emu__DOT__system__DOT__soundrom__DOT__mem, 64000, 0);
 		//ImGui::End();
-		ImGui::Begin("AY Register");
-		mem_edit.DrawContents(&top->emu__DOT__system__DOT__music__DOT__jt49_music__DOT__regarray, 16, 0);
-		ImGui::End();
-
 
 		int windowX = 550;
 		int windowWidth = (VGA_WIDTH * VGA_SCALE_X) + 24;

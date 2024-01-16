@@ -35,6 +35,8 @@
 	.globl _menu_tlx
 	.globl _timer_interval
 	.globl _mode
+	.globl _lbly
+	.globl _lblx
 	.globl _bry
 	.globl _brx
 	.globl _tly
@@ -152,6 +154,10 @@ _brx::
 	.ds 1
 _bry::
 	.ds 1
+_lblx::
+	.ds 1
+_lbly::
+	.ds 1
 _mode::
 	.ds 1
 _timer_interval::
@@ -259,7 +265,7 @@ _basic_input::
 	ld	(_input_b+0), a
 ;os.c:54: }
 	ret
-;os.c:64: void draw_colour()
+;os.c:67: void draw_colour()
 ;	---------------------------------
 ; Function draw_colour
 ; ---------------------------------
@@ -270,7 +276,7 @@ _draw_colour::
 	ld	hl, #-34
 	add	hl, sp
 	ld	sp, hl
-;os.c:71: hcfr_colour_b[selected_type][selected_colour]);
+;os.c:74: hcfr_colour_b[selected_type][selected_colour]);
 	ld	bc, (_selected_type)
 	ld	b, #0x00
 	ld	l, c
@@ -297,20 +303,20 @@ _draw_colour::
 	add	hl, bc
 	ld	a, (hl)
 	ld	-1 (ix), a
-;os.c:70: hcfr_colour_g[selected_type][selected_colour],
+;os.c:73: hcfr_colour_g[selected_type][selected_colour],
 	ld	hl, #_hcfr_colour_g
 	add	hl, de
 	ld	b, #0x00
 	add	hl, bc
 	ld	b, (hl)
-;os.c:69: hcfr_colour_r[selected_type][selected_colour],
+;os.c:72: hcfr_colour_r[selected_type][selected_colour],
 	ld	hl, #_hcfr_colour_r
 	add	hl, de
 	ld	e, c
 	ld	d, #0x00
 	add	hl, de
 	ld	d, (hl)
-;os.c:68: 16,
+;os.c:71: 16,
 	ld	a, -1 (ix)
 	push	af
 	inc	sp
@@ -322,29 +328,7 @@ _draw_colour::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:73: panel_shaded(tlx, tly, brx, bry, 17, 18, 19);
-	ld	de, #0x1312
-	push	de
-	ld	a, #0x11
-	push	af
-	inc	sp
-	ld	a, (_bry)
-	push	af
-	inc	sp
-	ld	a, (_brx)
-	push	af
-	inc	sp
-	ld	a, (_tly)
-	push	af
-	inc	sp
-	ld	a, (_tlx)
-	push	af
-	inc	sp
-	call	_panel_shaded
-	ld	hl, #7
-	add	hl, sp
-	ld	sp, hl
-;os.c:74: fill_bgcol(tlx + 1, tly + 1, brx, bry - 1, 16);
+;os.c:77: fill_bgcol(tlx + 1, tly + 1, brx, bry - 1, 16);
 	ld	hl,#_bry + 0
 	ld	d, (hl)
 	dec	d
@@ -371,7 +355,7 @@ _draw_colour::
 	pop	af
 	pop	af
 	inc	sp
-;os.c:75: clear_char_area(0, tlx, bry + 1, brx, bry + 3);
+;os.c:78: clear_char_area(0, tlx, bry + 1, brx, bry + 3);
 	ld	hl,#_bry + 0
 	ld	b, (hl)
 	ld	a, b
@@ -396,8 +380,8 @@ _draw_colour::
 	pop	af
 	pop	af
 	inc	sp
-;os.c:76: write_string(hcfr_type[selected_type], 18, tlx, bry + 1);
-	ld	hl,#_bry + 0
+;os.c:80: write_string(hcfr_type[selected_type], 18, lblx, lbly + 1);
+	ld	hl,#_lbly + 0
 	ld	d, (hl)
 	inc	d
 	ld	bc, #_hcfr_type+0
@@ -411,7 +395,7 @@ _draw_colour::
 	ld	b, (hl)
 	push	de
 	inc	sp
-	ld	a, (_tlx)
+	ld	a, (_lblx)
 	ld	d,a
 	ld	e,#0x12
 	push	de
@@ -420,8 +404,8 @@ _draw_colour::
 	pop	af
 	pop	af
 	inc	sp
-;os.c:77: write_string(hcfr_colour_name[selected_type][selected_colour], 18, tlx, bry + 2);
-	ld	hl,#_bry + 0
+;os.c:81: write_string(hcfr_colour_name[selected_type][selected_colour], 18, lblx, lbly + 2);
+	ld	hl,#_lbly + 0
 	ld	d, (hl)
 	inc	d
 	inc	d
@@ -451,7 +435,7 @@ _draw_colour::
 	ld	b, (hl)
 	push	de
 	inc	sp
-	ld	a, (_tlx)
+	ld	a, (_lblx)
 	ld	d,a
 	ld	e,#0x12
 	push	de
@@ -460,7 +444,7 @@ _draw_colour::
 	pop	af
 	pop	af
 	inc	sp
-;os.c:80: sprintf(temp, "%03d, %03d, %03d", hcfr_colour_r[selected_type][selected_colour], hcfr_colour_g[selected_type][selected_colour], hcfr_colour_b[selected_type][selected_colour]);
+;os.c:84: sprintf(temp, "%03d, %03d, %03d", hcfr_colour_r[selected_type][selected_colour], hcfr_colour_g[selected_type][selected_colour], hcfr_colour_b[selected_type][selected_colour]);
 	ld	bc, (_selected_type)
 	ld	b, #0x00
 	ld	l, c
@@ -479,9 +463,9 @@ _draw_colour::
 	add	hl, de
 	ld	c, l
 	ld	b, h
-;os.c:71: hcfr_colour_b[selected_type][selected_colour]);
+;os.c:74: hcfr_colour_b[selected_type][selected_colour]);
 	ld	a,(#_selected_colour + 0)
-;os.c:80: sprintf(temp, "%03d, %03d, %03d", hcfr_colour_r[selected_type][selected_colour], hcfr_colour_g[selected_type][selected_colour], hcfr_colour_b[selected_type][selected_colour]);
+;os.c:84: sprintf(temp, "%03d, %03d, %03d", hcfr_colour_r[selected_type][selected_colour], hcfr_colour_g[selected_type][selected_colour], hcfr_colour_b[selected_type][selected_colour]);
 	ld	-1 (ix), a
 	ld	l, a
 	ld	h, #0x00
@@ -530,33 +514,33 @@ _draw_colour::
 	add	hl, sp
 	ld	sp, hl
 	pop	de
-;os.c:81: write_string(temp, 18, tlx, bry + 3);
-	ld	a,(#_bry + 0)
+;os.c:85: write_string(temp, 18, lblx, lbly + 3);
+	ld	a,(#_lbly + 0)
 	add	a, #0x03
 	push	af
 	inc	sp
-	ld	a, (_tlx)
+	ld	a, (_lblx)
 	ld	b,a
 	ld	c,#0x12
 	push	bc
 	push	de
 	call	_write_string
-;os.c:82: }
+;os.c:86: }
 	ld	sp,ix
 	pop	ix
 	ret
 ___str_0:
 	.ascii "%03d, %03d, %03d"
 	.db 0x00
-;os.c:91: void timer_off()
+;os.c:95: void timer_off()
 ;	---------------------------------
 ; Function timer_off
 ; ---------------------------------
 _timer_off::
-;os.c:93: timer_interval = 0;
+;os.c:97: timer_interval = 0;
 	ld	hl,#_timer_interval + 0
 	ld	(hl), #0x00
-;os.c:94: write_string(" ", colour_cga_darkred, brx, tly - 1);
+;os.c:98: write_string(" ", colour_cga_darkred, brx, tly - 1);
 	ld	hl,#_tly + 0
 	ld	b, (hl)
 	dec	b
@@ -572,20 +556,20 @@ _timer_off::
 	pop	af
 	pop	af
 	inc	sp
-;os.c:95: }
+;os.c:99: }
 	ret
 ___str_1:
 	.ascii " "
 	.db 0x00
-;os.c:96: void timer_on()
+;os.c:100: void timer_on()
 ;	---------------------------------
 ; Function timer_on
 ; ---------------------------------
 _timer_on::
-;os.c:98: timer_interval = timer_interval_max;
+;os.c:102: timer_interval = timer_interval_max;
 	ld	hl,#_timer_interval + 0
 	ld	(hl), #0x3c
-;os.c:99: write_string("*", colour_cga_darkred, brx, tly - 1);
+;os.c:103: write_string("*", colour_cga_darkred, brx, tly - 1);
 	ld	hl,#_tly + 0
 	ld	b, (hl)
 	dec	b
@@ -601,12 +585,12 @@ _timer_on::
 	pop	af
 	pop	af
 	inc	sp
-;os.c:100: }
+;os.c:104: }
 	ret
 ___str_2:
 	.ascii "*"
 	.db 0x00
-;os.c:107: void draw_menu()
+;os.c:111: void draw_menu()
 ;	---------------------------------
 ; Function draw_menu
 ; ---------------------------------
@@ -617,7 +601,7 @@ _draw_menu::
 	ld	hl, #-6
 	add	hl, sp
 	ld	sp, hl
-;os.c:109: panel_shaded(menu_tlx, menu_tly, menu_brx, menu_tly + 2, 20, 21, 22);
+;os.c:113: panel_shaded(menu_tlx, menu_tly, menu_brx, menu_tly + 2, 20, 21, 22);
 	ld	hl,#_menu_tly + 0
 	ld	b, (hl)
 	inc	b
@@ -642,7 +626,7 @@ _draw_menu::
 	ld	hl, #7
 	add	hl, sp
 	ld	sp, hl
-;os.c:110: write_string("Select standard", colour_cga_lightcyan, menu_tlx + 3, menu_tly + 1);
+;os.c:114: write_string("Select standard", colour_cga_lightcyan, menu_tlx + 3, menu_tly + 1);
 	ld	hl,#_menu_tly + 0
 	ld	b, (hl)
 	inc	b
@@ -660,7 +644,7 @@ _draw_menu::
 	pop	af
 	pop	af
 	inc	sp
-;os.c:111: panel_shaded(menu_tlx, menu_tly + 3, menu_brx, menu_bry, 20, 21, 22);
+;os.c:115: panel_shaded(menu_tlx, menu_tly + 3, menu_brx, menu_bry, 20, 21, 22);
 	ld	a,(#_menu_tly + 0)
 	add	a, #0x03
 	ld	b, a
@@ -684,11 +668,11 @@ _draw_menu::
 	ld	hl, #7
 	add	hl, sp
 	ld	sp, hl
-;os.c:112: unsigned char y = menu_tly + 5;
+;os.c:116: unsigned char y = menu_tly + 5;
 	ld	a,(#_menu_tly + 0)
 	add	a, #0x05
 	ld	-6 (ix), a
-;os.c:113: for (int t = 0; t < hcfr_type_max; t++)
+;os.c:117: for (int t = 0; t < hcfr_type_max; t++)
 	ld	bc, #0x0000
 00103$:
 	ld	a, c
@@ -699,7 +683,7 @@ _draw_menu::
 	rra
 	sbc	a, #0x80
 	jp	NC, 00105$
-;os.c:115: unsigned char c = selected_type == t ? colour_cga_lightred : colour_cga_white;
+;os.c:119: unsigned char c = selected_type == t ? colour_cga_lightred : colour_cga_white;
 	ld	iy, #_selected_type
 	ld	l, 0 (iy)
 	ld	h, #0x00
@@ -712,7 +696,7 @@ _draw_menu::
 	ld	de, #0x000f
 00108$:
 	ld	-5 (ix), e
-;os.c:116: unsigned char l = strlen(hcfr_wp[t]);
+;os.c:120: unsigned char l = strlen(hcfr_wp[t]);
 	ld	e, c
 	ld	d, b
 	sla	e
@@ -731,7 +715,7 @@ _draw_menu::
 	pop	af
 	pop	bc
 	ld	-2 (ix), l
-;os.c:117: write_string(hcfr_type[t], c, menu_tlx + 2, y);
+;os.c:121: write_string(hcfr_type[t], c, menu_tlx + 2, y);
 	ld	a,(#_menu_tlx + 0)
 	add	a, #0x02
 	ld	-1 (ix), a
@@ -753,7 +737,7 @@ _draw_menu::
 	pop	af
 	inc	sp
 	pop	bc
-;os.c:118: write_string(hcfr_wp[t], c, (menu_brx - 2) - l, y);
+;os.c:122: write_string(hcfr_wp[t], c, (menu_brx - 2) - l, y);
 	ld	a,(#_menu_brx + 0)
 	dec	a
 	dec	a
@@ -778,94 +762,94 @@ _draw_menu::
 	pop	af
 	inc	sp
 	pop	bc
-;os.c:119: y += 2;
+;os.c:123: y += 2;
 	ld	a, -6 (ix)
 	add	a, #0x02
 	ld	-6 (ix), a
-;os.c:113: for (int t = 0; t < hcfr_type_max; t++)
+;os.c:117: for (int t = 0; t < hcfr_type_max; t++)
 	inc	bc
 	jp	00103$
 00105$:
-;os.c:121: }
+;os.c:125: }
 	ld	sp, ix
 	pop	ix
 	ret
 ___str_3:
 	.ascii "Select standard"
 	.db 0x00
-;os.c:123: void start_mode_menu()
+;os.c:127: void start_mode_menu()
 ;	---------------------------------
 ; Function start_mode_menu
 ; ---------------------------------
 _start_mode_menu::
-;os.c:125: clear_chars(0);
+;os.c:129: clear_chars(0);
 	xor	a, a
 	push	af
 	inc	sp
 	call	_clear_chars
 	inc	sp
-;os.c:126: clear_bgcolor(0);
+;os.c:130: clear_bgcolor(0);
 	xor	a, a
 	push	af
 	inc	sp
 	call	_clear_bgcolor
 	inc	sp
-;os.c:127: draw_menu();
+;os.c:131: draw_menu();
 	call	_draw_menu
-;os.c:128: mode = const_mode_menu;
+;os.c:132: mode = const_mode_menu;
 	ld	hl,#_mode + 0
 	ld	(hl), #0x00
-;os.c:129: }
+;os.c:133: }
 	ret
-;os.c:131: void start_mode_show()
+;os.c:135: void start_mode_show()
 ;	---------------------------------
 ; Function start_mode_show
 ; ---------------------------------
 _start_mode_show::
-;os.c:133: clear_chars(0);
+;os.c:137: clear_chars(0);
 	xor	a, a
 	push	af
 	inc	sp
 	call	_clear_chars
 	inc	sp
-;os.c:134: clear_bgcolor(0);
+;os.c:138: clear_bgcolor(0);
 	xor	a, a
 	push	af
 	inc	sp
 	call	_clear_bgcolor
 	inc	sp
-;os.c:135: draw_colour();
+;os.c:139: draw_colour();
 	call	_draw_colour
-;os.c:136: selected_colour = 0;
+;os.c:140: selected_colour = 0;
 	ld	hl,#_selected_colour + 0
 	ld	(hl), #0x00
-;os.c:137: mode = const_mode_show;
+;os.c:141: mode = const_mode_show;
 	ld	hl,#_mode + 0
 	ld	(hl), #0x01
-;os.c:138: }
+;os.c:142: }
 	ret
-;os.c:140: void mode_menu()
+;os.c:144: void mode_menu()
 ;	---------------------------------
 ; Function mode_menu
 ; ---------------------------------
 _mode_menu::
-;os.c:142: if (VBLANK_RISING)
+;os.c:146: if (VBLANK_RISING)
 	ld	hl,#_vblank+0
 	bit	0, (hl)
 	ret	Z
 	ld	hl,#_vblank_last+0
 	bit	0, (hl)
 	ret	NZ
-;os.c:144: basic_input();
+;os.c:148: basic_input();
 	call	_basic_input
-;os.c:146: if (input_up && !input_up_last)
+;os.c:150: if (input_up && !input_up_last)
 	ld	iy, #_input_up
 	bit	0, 0 (iy)
 	jr	Z,00102$
 	ld	iy, #_input_up_last
 	bit	0, 0 (iy)
 	jr	NZ,00102$
-;os.c:148: selected_type = (selected_type == 0) ? hcfr_type_max - 1 : selected_type - 1;
+;os.c:152: selected_type = (selected_type == 0) ? hcfr_type_max - 1 : selected_type - 1;
 	ld	a,(#_selected_type + 0)
 	or	a, a
 	jr	NZ,00115$
@@ -876,17 +860,17 @@ _mode_menu::
 	dec	a
 00116$:
 	ld	(_selected_type+0), a
-;os.c:149: draw_menu();
+;os.c:153: draw_menu();
 	call	_draw_menu
 00102$:
-;os.c:151: if (input_down && !input_down_last)
+;os.c:155: if (input_down && !input_down_last)
 	ld	iy, #_input_down
 	bit	0, 0 (iy)
 	jr	Z,00105$
 	ld	iy, #_input_down_last
 	bit	0, 0 (iy)
 	jr	NZ,00105$
-;os.c:153: selected_type = (selected_type == hcfr_type_max - 1) ? 0 : selected_type + 1;
+;os.c:157: selected_type = (selected_type == hcfr_type_max - 1) ? 0 : selected_type + 1;
 	ld	a,(#_selected_type + 0)
 	sub	a, #0x07
 	jr	NZ,00117$
@@ -901,41 +885,41 @@ _mode_menu::
 00118$:
 	ld	hl,#_selected_type + 0
 	ld	(hl), c
-;os.c:154: draw_menu();
+;os.c:158: draw_menu();
 	call	_draw_menu
 00105$:
-;os.c:156: if (input_a && !input_a_last)
+;os.c:160: if (input_a && !input_a_last)
 	ld	iy, #_input_a
 	bit	0, 0 (iy)
 	ret	Z
 	ld	iy, #_input_a_last
 	bit	0, 0 (iy)
-;os.c:158: start_mode_show();
+;os.c:162: start_mode_show();
 	jp	Z,_start_mode_show
-;os.c:161: }
+;os.c:165: }
 	ret
-;os.c:163: void mode_show()
+;os.c:167: void mode_show()
 ;	---------------------------------
 ; Function mode_show
 ; ---------------------------------
 _mode_show::
-;os.c:166: if (VBLANK_RISING)
+;os.c:170: if (VBLANK_RISING)
 	ld	hl,#_vblank+0
 	bit	0, (hl)
 	ret	Z
 	ld	hl,#_vblank_last+0
 	bit	0, (hl)
 	ret	NZ
-;os.c:168: basic_input();
+;os.c:172: basic_input();
 	call	_basic_input
-;os.c:170: if (input_up && !input_up_last)
+;os.c:174: if (input_up && !input_up_last)
 	ld	iy, #_input_up
 	bit	0, 0 (iy)
 	jr	Z,00102$
 	ld	iy, #_input_up_last
 	bit	0, 0 (iy)
 	jr	NZ,00102$
-;os.c:172: selected_type = (selected_type == 0) ? hcfr_type_max - 1 : selected_type - 1;
+;os.c:176: selected_type = (selected_type == 0) ? hcfr_type_max - 1 : selected_type - 1;
 	ld	a,(#_selected_type + 0)
 	or	a, a
 	jr	NZ,00132$
@@ -946,19 +930,19 @@ _mode_show::
 	dec	a
 00133$:
 	ld	(_selected_type+0), a
-;os.c:173: draw_colour();
+;os.c:177: draw_colour();
 	call	_draw_colour
-;os.c:174: timer_off();
+;os.c:178: timer_off();
 	call	_timer_off
 00102$:
-;os.c:176: if (input_down && !input_down_last)
+;os.c:180: if (input_down && !input_down_last)
 	ld	iy, #_input_down
 	bit	0, 0 (iy)
 	jr	Z,00105$
 	ld	iy, #_input_down_last
 	bit	0, 0 (iy)
 	jr	NZ,00105$
-;os.c:178: selected_type = (selected_type == hcfr_type_max - 1) ? 0 : selected_type + 1;
+;os.c:182: selected_type = (selected_type == hcfr_type_max - 1) ? 0 : selected_type + 1;
 	ld	a,(#_selected_type + 0)
 	sub	a, #0x07
 	jr	NZ,00134$
@@ -973,19 +957,19 @@ _mode_show::
 00135$:
 	ld	hl,#_selected_type + 0
 	ld	(hl), c
-;os.c:179: draw_colour();
+;os.c:183: draw_colour();
 	call	_draw_colour
-;os.c:180: timer_off();
+;os.c:184: timer_off();
 	call	_timer_off
 00105$:
-;os.c:182: if (input_left && !input_left_last)
+;os.c:186: if (input_left && !input_left_last)
 	ld	iy, #_input_left
 	bit	0, 0 (iy)
 	jr	Z,00108$
 	ld	iy, #_input_left_last
 	bit	0, 0 (iy)
 	jr	NZ,00108$
-;os.c:184: selected_colour = (selected_colour == 0) ? hcfr_colour_max - 1 : selected_colour - 1;
+;os.c:188: selected_colour = (selected_colour == 0) ? hcfr_colour_max - 1 : selected_colour - 1;
 	ld	a,(#_selected_colour + 0)
 	or	a, a
 	jr	NZ,00136$
@@ -996,19 +980,19 @@ _mode_show::
 	dec	a
 00137$:
 	ld	(_selected_colour+0), a
-;os.c:185: draw_colour();
+;os.c:189: draw_colour();
 	call	_draw_colour
-;os.c:186: timer_off();
+;os.c:190: timer_off();
 	call	_timer_off
 00108$:
-;os.c:188: if (input_right && !input_right_last)
+;os.c:192: if (input_right && !input_right_last)
 	ld	iy, #_input_right
 	bit	0, 0 (iy)
 	jr	Z,00111$
 	ld	iy, #_input_right_last
 	bit	0, 0 (iy)
 	jr	NZ,00111$
-;os.c:190: selected_colour = (selected_colour == hcfr_colour_max - 1) ? 0 : selected_colour + 1;
+;os.c:194: selected_colour = (selected_colour == hcfr_colour_max - 1) ? 0 : selected_colour + 1;
 	ld	a,(#_selected_colour + 0)
 	sub	a, #0x52
 	jr	NZ,00138$
@@ -1023,23 +1007,23 @@ _mode_show::
 00139$:
 	ld	hl,#_selected_colour + 0
 	ld	(hl), c
-;os.c:191: draw_colour();
+;os.c:195: draw_colour();
 	call	_draw_colour
-;os.c:192: timer_off();
+;os.c:196: timer_off();
 	call	_timer_off
 00111$:
-;os.c:195: if (timer_interval > 0)
+;os.c:199: if (timer_interval > 0)
 	ld	iy, #_timer_interval
 	ld	a, 0 (iy)
 	or	a, a
 	jr	Z,00122$
-;os.c:197: timer_interval--;
+;os.c:201: timer_interval--;
 	dec	0 (iy)
-;os.c:198: if (timer_interval == 0)
+;os.c:202: if (timer_interval == 0)
 	ld	a, 0 (iy)
 	or	a, a
 	jr	NZ,00114$
-;os.c:200: selected_colour = (selected_colour == hcfr_colour_max - 1) ? 0 : selected_colour + 1;
+;os.c:204: selected_colour = (selected_colour == hcfr_colour_max - 1) ? 0 : selected_colour + 1;
 	ld	a,(#_selected_colour + 0)
 	sub	a, #0x52
 	jr	NZ,00140$
@@ -1054,49 +1038,49 @@ _mode_show::
 00141$:
 	ld	hl,#_selected_colour + 0
 	ld	(hl), c
-;os.c:201: draw_colour();
+;os.c:205: draw_colour();
 	call	_draw_colour
-;os.c:202: timer_interval = timer_interval_max;
+;os.c:206: timer_interval = timer_interval_max;
 	ld	iy, #_timer_interval
 	ld	0 (iy), #0x3c
 00114$:
-;os.c:204: if (input_a && !input_a_last)
+;os.c:208: if (input_a && !input_a_last)
 	ld	iy, #_input_a
 	bit	0, 0 (iy)
 	jr	Z,00123$
 	ld	iy, #_input_a_last
 	bit	0, 0 (iy)
 	jr	NZ,00123$
-;os.c:206: timer_off();
+;os.c:210: timer_off();
 	call	_timer_off
 	jr	00123$
 00122$:
-;os.c:211: if (input_a && !input_a_last)
+;os.c:215: if (input_a && !input_a_last)
 	ld	iy, #_input_a
 	bit	0, 0 (iy)
 	jr	Z,00123$
 	ld	iy, #_input_a_last
 	bit	0, 0 (iy)
 	jr	NZ,00123$
-;os.c:213: timer_on();
+;os.c:217: timer_on();
 	call	_timer_on
 00123$:
-;os.c:216: if (input_b && !input_b_last)
+;os.c:220: if (input_b && !input_b_last)
 	ld	iy, #_input_b
 	bit	0, 0 (iy)
 	ret	Z
 	ld	iy, #_input_b_last
 	bit	0, 0 (iy)
-;os.c:218: start_mode_menu();
+;os.c:222: start_mode_menu();
 	jp	Z,_start_mode_menu
-;os.c:221: }
+;os.c:225: }
 	ret
-;os.c:224: void app_main()
+;os.c:228: void app_main()
 ;	---------------------------------
 ; Function app_main
 ; ---------------------------------
 _app_main::
-;os.c:226: chram_size = chram_cols * chram_rows;
+;os.c:230: chram_size = chram_cols * chram_rows;
 	ld	hl,#_chram_rows + 0
 	ld	e, (hl)
 	ld	hl,#_chram_cols + 0
@@ -1111,21 +1095,21 @@ _app_main::
 00125$:
 	djnz	00124$
 	ld	(_chram_size), hl
-;os.c:228: clear_chars(0);
+;os.c:232: clear_chars(0);
 	xor	a, a
 	push	af
 	inc	sp
 	call	_clear_chars
 	inc	sp
-;os.c:229: clear_bgcolor(transparent_char);
+;os.c:233: clear_bgcolor(transparent_char);
 	ld	a, #0xff
 	push	af
 	inc	sp
 	call	_clear_bgcolor
 	inc	sp
-;os.c:231: set_default_char_palette();
+;os.c:235: set_default_char_palette();
 	call	_set_default_char_palette
-;os.c:233: set_char_palette(16, 50, 50, 50);
+;os.c:237: set_char_palette(16, 50, 50, 50);
 	ld	de, #0x3232
 	push	de
 	ld	de, #0x3210
@@ -1133,7 +1117,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:235: set_char_palette(17, 255, 255, 255); // White?
+;os.c:239: set_char_palette(17, 255, 255, 255); // White?
 	ld	de, #0xffff
 	push	de
 	ld	de, #0xff11
@@ -1141,7 +1125,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:236: set_char_palette(18, 160, 160, 160); // Grey
+;os.c:240: set_char_palette(18, 160, 160, 160); // Grey
 	ld	de, #0xa0a0
 	push	de
 	ld	de, #0xa012
@@ -1149,7 +1133,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:237: set_char_palette(19, 80, 80, 80);	 // Dark grey
+;os.c:241: set_char_palette(19, 80, 80, 80);	 // Dark grey
 	ld	de, #0x5050
 	push	de
 	ld	de, #0x5013
@@ -1157,7 +1141,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:239: set_char_palette(20, 90, 179, 255); // Light blue
+;os.c:243: set_char_palette(20, 90, 179, 255); // Light blue
 	ld	de, #0xffb3
 	push	de
 	ld	de, #0x5a14
@@ -1165,7 +1149,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:240: set_char_palette(21, 54, 139, 255); // Blue
+;os.c:244: set_char_palette(21, 54, 139, 255); // Blue
 	ld	de, #0xff8b
 	push	de
 	ld	de, #0x3615
@@ -1173,7 +1157,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:241: set_char_palette(22, 0, 67, 252);	// Dark blue
+;os.c:245: set_char_palette(22, 0, 67, 252);	// Dark blue
 	ld	de, #0xfc43
 	push	de
 	xor	a, a
@@ -1183,17 +1167,17 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:243: start_mode_menu();
+;os.c:247: start_mode_menu();
 	call	_start_mode_menu
-;os.c:245: while (1)
+;os.c:249: while (1)
 00105$:
-;os.c:247: hsync = input0 & 0x80;
+;os.c:251: hsync = input0 & 0x80;
 	ld	iy, #_input0
 	ld	a, 0 (iy)
 	rlc	a
 	and	a, #0x01
 	ld	(_hsync+0), a
-;os.c:248: vsync = input0 & 0x40;
+;os.c:252: vsync = input0 & 0x40;
 	ld	a, 0 (iy)
 	and	a, #0x40
 	ld	c,a
@@ -1202,7 +1186,7 @@ _app_main::
 	ld	a, #0x00
 	rla
 	ld	(_vsync+0), a
-;os.c:249: hblank = input0 & 0x20;
+;os.c:253: hblank = input0 & 0x20;
 	ld	a, 0 (iy)
 	and	a, #0x20
 	ld	c, a
@@ -1213,7 +1197,7 @@ _app_main::
 	ld	a, #0x00
 	rla
 	ld	(_hblank+0), a
-;os.c:250: vblank = CHECK_BIT(input0, INPUT_VBLANK);
+;os.c:254: vblank = CHECK_BIT(input0, INPUT_VBLANK);
 	ld	a, 0 (iy)
 	and	a, #0x10
 	ld	c, a
@@ -1221,7 +1205,7 @@ _app_main::
 	cp	a, c
 	rla
 	ld	(_vblank+0), a
-;os.c:252: switch (mode)
+;os.c:256: switch (mode)
 	ld	iy, #_mode
 	ld	a, 0 (iy)
 	or	a, a
@@ -1230,43 +1214,43 @@ _app_main::
 	dec	a
 	jr	Z,00102$
 	jr	00103$
-;os.c:254: case const_mode_menu:
+;os.c:258: case const_mode_menu:
 00101$:
-;os.c:255: mode_menu();
+;os.c:259: mode_menu();
 	call	_mode_menu
-;os.c:256: break;
+;os.c:260: break;
 	jr	00103$
-;os.c:257: case const_mode_show:
+;os.c:261: case const_mode_show:
 00102$:
-;os.c:258: mode_show();
+;os.c:262: mode_show();
 	call	_mode_show
-;os.c:260: }
+;os.c:264: }
 00103$:
-;os.c:262: hsync_last = hsync;
+;os.c:266: hsync_last = hsync;
 	ld	a,(#_hsync + 0)
 	ld	iy, #_hsync_last
 	ld	0 (iy), a
-;os.c:263: vsync_last = vsync;
+;os.c:267: vsync_last = vsync;
 	ld	a,(#_vsync + 0)
 	ld	iy, #_vsync_last
 	ld	0 (iy), a
-;os.c:264: hblank_last = hblank;
+;os.c:268: hblank_last = hblank;
 	ld	a,(#_hblank + 0)
 	ld	iy, #_hblank_last
 	ld	0 (iy), a
-;os.c:265: vblank_last = vblank;
+;os.c:269: vblank_last = vblank;
 	ld	a,(#_vblank + 0)
 	ld	iy, #_vblank_last
 	ld	0 (iy), a
-;os.c:267: }
+;os.c:271: }
 	jp	00105$
-;os.c:270: void main()
+;os.c:274: void main()
 ;	---------------------------------
 ; Function main
 ; ---------------------------------
 _main::
-;os.c:272: app_main();
-;os.c:273: }
+;os.c:276: app_main();
+;os.c:277: }
 	jp	_app_main
 	.area _CODE
 	.area _INITIALIZER
@@ -1295,13 +1279,17 @@ __xinit__selected_type:
 __xinit__selected_colour:
 	.db #0x00	; 0
 __xinit__tlx:
-	.db #0x09	; 9
+	.db #0x0b	; 11
 __xinit__tly:
-	.db #0x04	; 4
+	.db #0x06	; 6
 __xinit__brx:
-	.db #0x1e	; 30
+	.db #0x1b	; 27
 __xinit__bry:
-	.db #0x19	; 25
+	.db #0x16	; 22
+__xinit__lblx:
+	.db #0x0b	; 11
+__xinit__lbly:
+	.db #0x18	; 24
 __xinit__mode:
 	.db #0x00	; 0
 __xinit__timer_interval:
