@@ -624,10 +624,9 @@ wire [23:0] rgb_final;
 
 
 `ifdef DEBUG_SPRITE_COLLISION
-// highlight sprite collisions
-wire [23:0] rgb_sprite_debug = {3{spritedebugram_data_out_a}};
-assign rgb_final = spritedebugram_data_out_a ? rgb_sprite_debug : rgb_core;
-
+	// highlight sprite collisions
+	wire [23:0] rgb_sprite_debug = {3{spritedebugram_data_out_a}};
+	assign rgb_final = spritedebugram_data_out_a ? rgb_sprite_debug : rgb_core;
 `else
 	`ifdef ENABLE_DEBUG_RAMP
 		wire debug_ramp_active = joystick[6];
