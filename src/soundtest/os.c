@@ -53,6 +53,8 @@ void app_main()
 
 	bool star_x = 1;
 
+	//play_music(const_music_maintheme, 1);
+
 	while (1)
 	{
 		vblank = CHECK_BIT(input0, INPUT_VBLANK);

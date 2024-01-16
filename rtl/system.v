@@ -616,34 +616,39 @@ wire [23:0] rgb_charmap = { charmap_b, charmap_g, charmap_r };
 wire [23:0] rgb_tilemap = { tilemap_b, tilemap_g, tilemap_r };
 wire [23:0] rgb_sprite = { spr_b, spr_g, spr_r };
 
+
+wire [23:0] rgb_core = video_sprite_layer_high ? 
+							(spr_a ? rgb_sprite : charmap_a ? rgb_charmap : tilemap_a ? rgb_tilemap : rgb_starfield) :
+							(charmap_a ? rgb_charmap : spr_a ? rgb_sprite : tilemap_a ? rgb_tilemap : rgb_starfield);
+wire [23:0] rgb_final;
+
+
 `ifdef DEBUG_SPRITE_COLLISION
 // highlight sprite collisions
 wire [23:0] rgb_sprite_debug = {3{spritedebugram_data_out_a}};
-wire [23:0] rgb_final = spritedebugram_data_out_a ? rgb_sprite_debug : video_sprite_layer_high ? 
-							(spr_a ? rgb_sprite : charmap_a ? rgb_charmap : tilemap_a ? rgb_tilemap : rgb_starfield) :
-							(charmap_a ? rgb_charmap : spr_a ? rgb_sprite : tilemap_a ? rgb_tilemap : rgb_starfield);
-`endif
-`ifndef DEBUG_SPRITE_COLLISION
+assign rgb_final = spritedebugram_data_out_a ? rgb_sprite_debug : rgb_core;
 
-wire debug_ramp_active = joystick[6];
-wire [9:0] ramp_x = (hcnt - 32);
-wire [7:0] debug_ramp_gray = (ramp_x<256) ? ramp_x[7:0] : 8'b0;
-wire [23:0] debug_ramp = vcnt<60 ?	{3{debug_ramp_gray}} :
-						vcnt<120 ?	{debug_ramp_gray, 8'b0, 8'b0} :
-						vcnt<180 ?	{8'b0, debug_ramp_gray, 8'b0} :
-									{8'b0, 8'b0, debug_ramp_gray};
-
-wire [23:0] rgb_final = debug_ramp_active ? debug_ramp :
-						(video_sprite_layer_high ? 
-						(spr_a ? rgb_sprite : charmap_a ? rgb_charmap : tilemap_a ? rgb_tilemap : rgb_starfield) :
-						(charmap_a ? rgb_charmap : spr_a ? rgb_sprite : tilemap_a ? rgb_tilemap : rgb_starfield));
+`else
+	`ifdef ENABLE_DEBUG_RAMP
+		wire debug_ramp_active = joystick[6];
+		wire [9:0] ramp_x = (hcnt - 32);
+		wire [7:0] debug_ramp_gray = (ramp_x<256) ? ramp_x[7:0] : 8'b0;
+		wire [23:0] debug_ramp = vcnt<60 ?	{3{debug_ramp_gray}} :
+								vcnt<120 ?	{debug_ramp_gray, 8'b0, 8'b0} :
+								vcnt<180 ?	{8'b0, debug_ramp_gray, 8'b0} :
+											{8'b0, 8'b0, debug_ramp_gray};
+		assign rgb_final = debug_ramp_active ? debug_ramp : rgb_core;
+	`else
+		assign rgb_final = rgb_core;
+	`endif
 `endif
 
-assign VGA_R = rgb_final[7:0];
-assign VGA_G = rgb_final[15:8];
-assign VGA_B = rgb_final[23:16];
-
-// Music player
+wire de = ~(VGA_VB || VGA_HB);
+assign VGA_R = de ? rgb_final[7:0] : 8'b0;
+assign VGA_G = de ? rgb_final[15:8] : 8'b0;
+assign VGA_B = de ? rgb_final[23:16] : 8'b0;
+	
+	// Music player
 wire [9:0] music_audio_out;
 `ifndef DISABLE_MUSIC
 localparam MUSIC_ROM_WIDTH = 16;
@@ -850,15 +855,10 @@ dpram #(TILEMAP_RAM_WIDTH,8) tilemapram
 // Tilemap ROM (0x1000 / 4096 bytes)
 dpram_w1r2 #(TILEMAP_ROM_WIDTH,8, "tilemap.hex") tilemaprom
 (
-	.clock_a(),
-	.address_a(),
-	.wren_a(),
-	.data_a(),
-	// .clock_a(clk_24),
-	// .address_a(dn_addr[TILEMAP_ROM_WIDTH-1:0]),
-	// .wren_a(tilemaprom_wr),
-	// .data_a(dn_data),
-
+	.clock_a(clk_24),
+	.address_a(dn_addr[TILEMAP_ROM_WIDTH-1:0]),
+	.wren_a(tilemaprom_wr),
+	.data_a(dn_data),
 	.clock_b(clk_24),
 	.address_b(tilemaprom_addr),
 	.q_b(tilemaprom_data_out)

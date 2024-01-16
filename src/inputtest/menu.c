@@ -34,6 +34,7 @@ char *menu_string[] = {
 	"Digital",
 	"Analog",
 	"Advanced",
+	"Gunsight",
 	"Button test",
 	"Credits"};
 
@@ -89,9 +90,12 @@ void menu()
 				state = STATE_START_INPUTTESTERADVANCED;
 				break;
 			case 3:
-				state = STATE_START_BTNTEST;
+				state = STATE_START_GUNSIGHT;
 				break;
 			case 4:
+				state = STATE_START_BTNTEST;
+				break;
+			case 5:
 				state = STATE_START_CREDITS;
 				break;
 			}

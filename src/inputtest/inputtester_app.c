@@ -23,6 +23,7 @@
 #include "../shared/ui.h"
 #include "../shared/ps2.h"
 #include "../shared/sprite.h"
+#include "../shared/tilemap.h"
 #include "fader.h"
 #include "menu.h"
 #include "sprite_images.h"
@@ -45,11 +46,8 @@ unsigned char kbd_scan_last = 1;
 unsigned char kbd_ascii_last = 1;
 unsigned char mse_button1_last = 255;
 unsigned char mse_button2_last = 255;
-signed char mse_x_last = 1;
-signed char mse_y_last = 1;
-signed char mse_w_last = 1;
-signed short mse_x_acc;
-signed short mse_y_acc;
+signed long mse_x_acc;
+signed long mse_y_acc;
 signed short mse_w_acc;
 
 unsigned char socd_ud[6]; // Concurrent press of U and D detected
@@ -58,7 +56,6 @@ unsigned char socd_lr[6]; // Concurrent press of L and R detected
 unsigned char socd_lr_last[6];
 
 #define MOUSE_POINTER_SPRITE 9
-
 
 // Mode switcher variables
 char modeswitchtimer_select = 0;
@@ -145,6 +142,16 @@ char btntest_results_offset = 0;
 char btntest_highlight = 0;
 char btntest_aftertimer = 0;
 
+unsigned char gunsight_back_colour = 0;
+#define gunsight_cursor_colour_max 3
+unsigned char gunsight_cursor_colour = 0;
+#define gunsight_back_colour_max 2
+unsigned char gunsight_text_colours[gunsight_back_colour_max] = {colour_cga_white, colour_cga_black};
+unsigned char gunsight_text_colour;
+unsigned short gunsight_pos_x;
+unsigned short gunsight_pos_y;
+unsigned char gunsight_bullet_index;
+unsigned char gunsight_crosshair_index = 15;
 
 // Draw static elements for digital input test page
 void page_inputtester_digital()
@@ -307,6 +314,37 @@ void start_btntest()
     write_string("Remember to enable fast USB polling!", colour_buttontest_text_secondary, 2, 25);
 }
 
+// Initialise Gunsight test state and draw static elements
+void start_gunsight()
+{
+    state = STATE_GUNSIGHT;
+    clear_chars(0);
+    clear_sprites();
+    clear_tilemap();
+    tilemap_offset_x = 0;
+    tilemap_offset_y = 0;
+    update_tilemap_offset();
+    for (unsigned short t = 0; t < 32 * 24; t++)
+    {
+        tilemapram[t] = 46 + gunsight_back_colour;
+    }
+    enable_sprite(gunsight_crosshair_index, sprite_palette_pointer, sprite_size_pointer, 0);
+    spr_index[gunsight_crosshair_index] = sprite_index_pointer_first + 1 + gunsight_cursor_colour;
+    spr_on[gunsight_crosshair_index] = 1;
+    SET_BIT(video_ctl, 0); // Enable sprite priority over charmap
+    gunsight_text_colour = gunsight_text_colours[gunsight_back_colour];
+    write_string("GUNSIGHT", gunsight_text_colour, 15, 0);
+    write_string("X) Cycle Background", gunsight_text_colour, 21, 28);
+    write_string("Y) Cycle Crosshair", gunsight_text_colour, 21, 29);
+}
+// Cleanup gunsight resources
+void stop_gunsight()
+{
+    clear_sprites();
+    update_sprites();
+    clear_tilemap();
+}
+
 // Rotate DPAD direction history and push new entry
 void pushhistory(char new)
 {
@@ -369,6 +407,8 @@ bool modeswitcher()
     {
         system_menu = 0;
         modeswitchtimer_select = 0;
+        clear_sprites();
+        update_sprites();
         start_menu();
         return 1;
     }
@@ -545,6 +585,12 @@ void inputtester_analog()
     }
 }
 
+#define mouse_div 16
+const unsigned int mouse_min_x = 32 * mouse_div;
+const unsigned int mouse_min_y = 32 * mouse_div;
+const unsigned int mouse_max_x = 352 * mouse_div;
+const unsigned int mouse_max_y = 272 * mouse_div;
+
 // Advanced input tester state
 void inputtester_advanced()
 {
@@ -675,24 +721,24 @@ void inputtester_advanced()
             mse_w_acc += mse_w;
 
             // Enforce mouse pointer limit
-            if (mse_x_acc < 32)
+            if (mse_x_acc < mouse_min_x)
             {
-                mse_x_acc = 32;
+                mse_x_acc = mouse_min_x;
             }
-            else if (mse_x_acc >= 671)
+            else if (mse_x_acc >= mouse_max_x)
             {
-                mse_x_acc = 671;
+                mse_x_acc = mouse_max_x;
             }
-            if (mse_y_acc < 32)
+            if (mse_y_acc < mouse_min_y)
             {
-                mse_y_acc = 32;
+                mse_y_acc = mouse_min_y;
             }
-            else if (mse_y_acc >= 511)
+            else if (mse_y_acc >= mouse_max_y)
             {
-                mse_y_acc = 511;
+                mse_y_acc = mouse_max_y;
             }
-            unsigned short mx = (mse_x_acc / 2);
-            unsigned short my = (mse_y_acc / 2);
+            unsigned short mx = (mse_x_acc / mouse_div);
+            unsigned short my = (mse_y_acc / mouse_div);
             if (mse_x != 0 || mse_y != 0)
             {
                 spr_on[MOUSE_POINTER_SPRITE] = 1;
@@ -1032,5 +1078,84 @@ void btntest()
     case btntest_mode_results:
         btntest_results();
         break;
+    }
+}
+
+
+// Gunsight test state
+void gunsight()
+{
+    // Handle PS/2 inputs whenever possible to improve latency
+    handle_ps2();
+    if (HBLANK_RISING)
+    {
+        basic_input();
+        handle_codes();
+        if (input_x && !input_x_last)
+        {
+            gunsight_back_colour++;
+            if (gunsight_back_colour == gunsight_back_colour_max)
+            {
+                gunsight_back_colour = 0;
+            }
+            start_gunsight();
+        }
+        if (input_y && !input_y_last)
+        {
+            gunsight_cursor_colour++;
+            if (gunsight_cursor_colour == gunsight_cursor_colour_max)
+            {
+                gunsight_cursor_colour = 0;
+            }
+            start_gunsight();
+        }
+        bool changed = false;
+        bool fire = (input_a && !input_a_last) || (input_b && !input_b_last);
+        if (fire)
+        {
+            enable_sprite(gunsight_bullet_index, sprite_palette_pointer, sprite_size_pointer, 0);
+            spr_index[gunsight_bullet_index] = sprite_index_pointer_first + 4 + gunsight_back_colour;
+            set_sprite_position(gunsight_bullet_index, gunsight_pos_x, gunsight_pos_y);
+            gunsight_bullet_index++;
+            if (gunsight_bullet_index >= gunsight_crosshair_index)
+            {
+                gunsight_bullet_index = 0;
+            }
+            changed=true;
+        }
+        signed char ax_l = analog_l[0];
+        signed char ay_l = analog_l[1];
+        if (ax_l != ax_l_last[0])
+        {
+            write_stringfs("X: %4d", gunsight_text_colour, 0, 29, ax_l);
+            gunsight_pos_x = 184 + ax_l;
+            gunsight_pos_x += (ax_l / 4);
+            changed = true;
+            ax_l_last[0] = ax_l;
+        }
+        if (ay_l != ay_l_last[0])
+        {
+            write_stringfs("Y: %4d", gunsight_text_colour, 8, 29, ay_l);
+            signed short tempy = (ay_l * 120);
+            tempy /= 128;
+            gunsight_pos_y = 144 + tempy;
+            changed = true;
+            ay_l_last[0] = ay_l;
+        }
+        if (changed)
+        {
+            set_sprite_position(gunsight_crosshair_index, gunsight_pos_x, gunsight_pos_y);
+            update_sprites();
+        }
+    }
+    // As soon as vsync is detected start drawing screen updates
+    if (VBLANK_RISING)
+    {
+        // Handle test mode switch
+        if (modeswitcher())
+        {
+            stop_gunsight();
+            return;
+        }
     }
 }
