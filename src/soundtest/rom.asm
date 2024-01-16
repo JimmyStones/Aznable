@@ -20,22 +20,21 @@
 	.globl _write_stringf
 	.globl _clear_chars
 	.globl _time
-	.globl _musicram
-	.globl _sndram
-	.globl _tilemapram
-	.globl _tilemapctl
 	.globl _spritecollisionram
 	.globl _spriteram
+	.globl _charpaletteram
 	.globl _bgcolram
 	.globl _fgcolram
 	.globl _chram
+	.globl _tilemapram
+	.globl _tilemapctl
+	.globl _musicram
+	.globl _sndram
 	.globl _system_menu
 	.globl _system_pause
 	.globl _starfield3
 	.globl _starfield2
 	.globl _starfield1
-	.globl _timer
-	.globl _timestamp
 	.globl _ps2_mouse
 	.globl _ps2_key
 	.globl _spinner
@@ -43,6 +42,8 @@
 	.globl _analog_r
 	.globl _analog_l
 	.globl _joystick
+	.globl _timer
+	.globl _timestamp
 	.globl _video_ctl
 	.globl _input0
 ;--------------------------------------------------------
@@ -54,29 +55,30 @@
 	.area _DATA
 _input0	=	0x8000
 _video_ctl	=	0x8001
+_timestamp	=	0x8080
+_timer	=	0x80c0
 _joystick	=	0x8100
 _analog_l	=	0x8200
-_analog_r	=	0x8300
-_paddle	=	0x8400
-_spinner	=	0x8500
-_ps2_key	=	0x8600
-_ps2_mouse	=	0x8700
-_timestamp	=	0x8800
-_timer	=	0x8900
-_starfield1	=	0x8a00
-_starfield2	=	0x8a10
-_starfield3	=	0x8a20
-_system_pause	=	0x8a30
-_system_menu	=	0x8a31
-_chram	=	0x9800
-_fgcolram	=	0xa000
-_bgcolram	=	0xa800
+_analog_r	=	0x8280
+_paddle	=	0x8300
+_spinner	=	0x8380
+_ps2_key	=	0x8400
+_ps2_mouse	=	0x8480
+_starfield1	=	0x8500
+_starfield2	=	0x8510
+_starfield3	=	0x8520
+_system_pause	=	0x8530
+_system_menu	=	0x8531
+_sndram	=	0x8580
+_musicram	=	0x8590
+_tilemapctl	=	0x8600
+_tilemapram	=	0x8610
+_chram	=	0x9200
+_fgcolram	=	0x9a00
+_bgcolram	=	0xa200
+_charpaletteram	=	0xaa00
 _spriteram	=	0xb000
 _spritecollisionram	=	0xb400
-_tilemapctl	=	0x8c00
-_tilemapram	=	0x8c10
-_sndram	=	0x8b00
-_musicram	=	0x8b10
 _time::
 	.ds 4
 ;--------------------------------------------------------
@@ -175,12 +177,12 @@ _app_main::
 	ld	c, #0x00
 ;os.c:54: bool star_x = 1;
 	ld	-3 (ix), #0x01
-;os.c:56: while (1)
+;os.c:58: while (1)
 	xor	a, a
 	ld	-2 (ix), a
 	ld	-1 (ix), a
 00116$:
-;os.c:58: vblank = CHECK_BIT(input0, INPUT_VBLANK);
+;os.c:60: vblank = CHECK_BIT(input0, INPUT_VBLANK);
 	ld	a,(#_input0 + 0)
 	and	a, #0x10
 	ld	b, a
@@ -188,14 +190,14 @@ _app_main::
 	cp	a, b
 	rla
 	ld	(_vblank+0), a
-;os.c:60: if (VBLANK_RISING)
+;os.c:62: if (VBLANK_RISING)
 	ld	iy, #_vblank
 	bit	0, 0 (iy)
 	jp	Z, 00113$
 	ld	iy, #_vblank_last
 	bit	0, 0 (iy)
 	jp	NZ, 00113$
-;os.c:62: write_stringf("frame %3d", 0xFF, 0, 29, frame);
+;os.c:64: write_stringf("frame %3d", 0xFF, 0, 29, frame);
 	ld	b, -2 (ix)
 	push	bc
 	push	bc
@@ -214,35 +216,35 @@ _app_main::
 	add	hl, sp
 	ld	sp, hl
 	pop	bc
-;os.c:63: frame++;
+;os.c:65: frame++;
 	inc	-2 (ix)
 	jr	NZ,00171$
 	inc	-1 (ix)
 00171$:
-;os.c:65: if (play_wait > 0)
+;os.c:67: if (play_wait > 0)
 	ld	a, c
 	or	a, a
 	jr	Z,00107$
-;os.c:67: play_wait--;
+;os.c:69: play_wait--;
 	dec	c
 	jr	00108$
 00107$:
-;os.c:71: handle_ps2();
+;os.c:73: handle_ps2();
 	push	bc
 	call	_handle_ps2
 	pop	bc
-;os.c:72: if (kbd_pressed)
+;os.c:74: if (kbd_pressed)
 	ld	a,(#_kbd_pressed + 0)
 	or	a, a
 	jr	Z,00108$
-;os.c:74: unsigned char s = kbd_ascii - 49;
+;os.c:76: unsigned char s = kbd_ascii - 49;
 	ld	a,(#_kbd_ascii + 0)
 	add	a, #0xcf
-;os.c:75: if (s < const_sound_sample_used)
+;os.c:77: if (s < const_sound_sample_used)
 	ld	b, a
 	sub	a, #0x04
 	jr	NC,00108$
-;os.c:77: write_stringf("playing %2d", 0xFF, 5, 20, s);
+;os.c:79: write_stringf("playing %2d", 0xFF, 5, 20, s);
 	push	bc
 	push	bc
 	inc	sp
@@ -260,13 +262,13 @@ _app_main::
 	inc	sp
 	call	_play_sound
 	inc	sp
-;os.c:79: play_wait = 15;
+;os.c:81: play_wait = 15;
 	ld	c, #0x0f
 00108$:
-;os.c:84: if (star_x)
+;os.c:86: if (star_x)
 	bit	0, -3 (ix)
 	jr	Z,00110$
-;os.c:86: signed short x = sinf(time) * 100;
+;os.c:88: signed short x = sinf(time) * 100;
 	push	bc
 	ld	hl, (_time + 2)
 	push	hl
@@ -296,7 +298,7 @@ _app_main::
 	pop	bc
 	jr	00111$
 00110$:
-;os.c:91: signed short y = cosf(time) * 100;
+;os.c:93: signed short y = cosf(time) * 100;
 	push	bc
 	ld	hl, (_time + 2)
 	push	hl
@@ -346,16 +348,16 @@ _app_main::
 	ldir
 	pop	bc
 00111$:
-;os.c:96: star_x = !star_x;
+;os.c:98: star_x = !star_x;
 	ld	a, -3 (ix)
 	xor	a, #0x01
 	ld	-3 (ix), a
 00113$:
-;os.c:99: vblank_last = vblank;
+;os.c:101: vblank_last = vblank;
 	ld	a,(#_vblank + 0)
 	ld	iy, #_vblank_last
 	ld	0 (iy), a
-;os.c:101: }
+;os.c:103: }
 	jp	00116$
 ___str_0:
 	.ascii "%d: Play "
@@ -366,13 +368,13 @@ ___str_1:
 ___str_2:
 	.ascii "playing %2d"
 	.db 0x00
-;os.c:104: void main()
+;os.c:106: void main()
 ;	---------------------------------
 ; Function main
 ; ---------------------------------
 _main::
-;os.c:106: app_main();
-;os.c:107: }
+;os.c:108: app_main();
+;os.c:109: }
 	jp	_app_main
 	.area _CODE
 	.area _INITIALIZER

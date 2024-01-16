@@ -89,9 +89,9 @@ extern char kbd_extend;
 extern char kbd_ascii;
 
 extern bool mse_changed;
-extern signed char mse_x;
-extern signed char mse_y;
-extern signed char mse_w;
+extern signed short mse_x;
+extern signed short mse_y;
+extern signed short mse_w;
 extern char mse_button1;
 extern char mse_button2;
 

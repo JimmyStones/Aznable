@@ -59,7 +59,7 @@ module music #(
 	jt49 jt49_music(
 		.clk(clk),
 		.clk_en(ce_2),
-		.rst_n(~(reset || ymp_state == YM_INIT || ymp_state == YM_STOPPED )), // Hold YM2149 in reset while player state is initialising or stopped
+		.rst_n(~(reset )), // Hold YM2149 in reset while player state is initialising or stopped
 		.addr(ymp_register),
 		.din(snd_data_in),
 		.dout(),

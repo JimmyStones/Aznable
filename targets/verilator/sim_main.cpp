@@ -155,10 +155,9 @@ int verilate() {
 }
 
 unsigned char mouse_clock = 0;
-unsigned char mouse_clock_reduce = 0;
 unsigned char mouse_buttons = 0;
-unsigned char mouse_x = 0;
-unsigned char mouse_y = 0;
+signed short mouse_x = 0;
+signed short mouse_y = 0;
 
 char spinner_toggle = 0;
 
@@ -352,6 +351,9 @@ int main(int argc, char** argv, char** env) {
 		ImGui::SliderInt("Rotate", &video.output_rotate, -1, 1); ImGui::SameLine();
 		ImGui::Checkbox("Flip V", &video.output_vflip);
 		ImGui::Text("main_time: %d frame_count: %d sim FPS: %f", main_time, video.count_frame, video.stats_fps);
+
+		ImGui::Text("mouse_x: %d  mouse_y: %d", mouse_x, mouse_y);
+		ImGui::Text("mouse_buttons: %d", mouse_buttons);
 		//ImGui::Text("pixel: %06d line: %03d", video.count_pixel, video.count_line);
 
 		// Draw VGA output
@@ -365,7 +367,7 @@ int main(int argc, char** argv, char** env) {
 		ImGui::SetWindowPos(windowTitle_Audio, ImVec2(windowX, windowHeight), ImGuiCond_Once);
 		ImGui::SetWindowSize(windowTitle_Audio, ImVec2(windowWidth, 250), ImGuiCond_Once);
 
-		
+
 		//float vol_l = ((signed short)(top->AUDIO_L) / 256.0f) / 256.0f;
 		//float vol_r = ((signed short)(top->AUDIO_R) / 256.0f) / 256.0f;
 		//ImGui::ProgressBar(vol_l + 0.5f, ImVec2(200, 16), 0); ImGui::SameLine();
@@ -375,7 +377,7 @@ int main(int argc, char** argv, char** env) {
 		if (run_enable) {
 			audio.CollectDebug((signed short)top->AUDIO_L, (signed short)top->AUDIO_R);
 		}
-		int channelWidth = (windowWidth / 2)  -16;
+		int channelWidth = (windowWidth / 2) - 16;
 		ImPlot::CreateContext();
 		if (ImPlot::BeginPlot("Audio - L", ImVec2(channelWidth, 220), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoTitle)) {
 			ImPlot::SetupAxes("T", "A", ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickMarks, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickMarks);
@@ -409,33 +411,71 @@ int main(int argc, char** argv, char** env) {
 		}
 		top->joystick_1 = top->joystick_0;
 
-		/*top->joystick_analog_0 += 1;
-		top->joystick_analog_0 -= 256;*/
-		//top->paddle_0 += 1;
-		//if (input.inputs[0] || input.inputs[1]) {
-		//	spinner_toggle = !spinner_toggle;
-		//	top->spinner_0 = (input.inputs[0]) ? 16 : -16;
-		//	for (char b = 8; b < 16; b++) {
-		//		top->spinner_0 &= ~(1UL << b);
-		//	}
-		//	if (spinner_toggle) { top->spinner_0 |= 1UL << 8; }
-		//}
+		mouse_buttons = 0 | (input.inputs[4]);
+		int acc = 10;
+		int dec = 1;
+		int fric = 2;
 
-		mouse_buttons = 0;
-		mouse_x = 0;
-		mouse_y = 0;
-		if (input.inputs[input_left]) { mouse_x = -2; }
-		if (input.inputs[input_right]) { mouse_x = 2; }
-		if (input.inputs[input_up]) { mouse_y = 2; }
-		if (input.inputs[input_down]) { mouse_y = -2; }
+		if (input.inputs[input_left]) { mouse_x -= acc; }
+		else if (mouse_x < 0) { mouse_x += (dec + (-mouse_x / fric)); }
+		if (input.inputs[input_right]) { mouse_x += acc; }
+		else if (mouse_x > 0) { mouse_x -= (dec + (mouse_x / fric)); }
+		if (input.inputs[input_up]) { mouse_y += acc; }
+		else if (mouse_y > 0) { mouse_y -= (dec + (mouse_y / fric)); }
+		if (input.inputs[input_down]) { mouse_y -= acc; }
+		else if (mouse_y < 0) { mouse_y += (dec + (-mouse_y / fric)); }
 
-		if (input.inputs[input_a]) { mouse_buttons |= (1UL << 0); }
-		if (input.inputs[input_b]) { mouse_buttons |= (1UL << 1); }
+		int lim = 255;
+		if (mouse_x > lim) { mouse_x = lim; }
+		if (mouse_x < -lim) { mouse_x = -lim; }
+		if (mouse_y > lim) { mouse_y = lim; }
+		if (mouse_y < -lim) { mouse_y = -lim; }
+
+		unsigned char ps2_mouse1;
+		unsigned char ps2_mouse2;
+		mouse_buttons |= (mouse_x < 0) ? 0x10 : 0x00;
+		if (mouse_x < -255)
+		{
+			// min possible value + overflow flag
+			mouse_buttons |= 0x40;
+			ps2_mouse1 = 1; // -255
+		}
+		else if (mouse_x > 255)
+		{
+			// max possible value + overflow flag
+			mouse_buttons |= 0x40;
+			ps2_mouse1 = 255;
+		}
+		else
+		{
+			ps2_mouse1 = (char)mouse_x;
+		}
+
+		// ------ Y axis -----------
+		// store sign bit in first byte
+		mouse_buttons |= (mouse_y < 0) ? 0x20 : 0x00;
+		if (mouse_y < -255)
+		{
+			// min possible value + overflow flag
+			mouse_buttons |= 0x80;
+			ps2_mouse2 = 1; // -255;
+		}
+		else if (mouse_y > 255)
+		{
+			// max possible value + overflow flag
+			mouse_buttons |= 0x80;
+			ps2_mouse2 = 255;
+		}
+		else
+		{
+			ps2_mouse2 = (char)mouse_y;
+		}
 
 		unsigned long mouse_temp = mouse_buttons;
-		mouse_temp += (mouse_x << 8);
-		mouse_temp += (mouse_y << 16);
+		mouse_temp += (((unsigned char)ps2_mouse1) << 8);
+		mouse_temp += (((unsigned char)ps2_mouse2) << 16);
 		if (mouse_clock) { mouse_temp |= (1UL << 24); }
+
 		mouse_clock = !mouse_clock;
 
 		top->ps2_mouse = mouse_temp;

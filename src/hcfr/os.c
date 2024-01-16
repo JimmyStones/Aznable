@@ -56,10 +56,13 @@ void basic_input()
 unsigned char selected_type = 0;
 unsigned char selected_colour = 0;
 
-unsigned char tlx = 9;
-unsigned char tly = 4;
-unsigned char brx = 30;
-unsigned char bry = 25;
+unsigned char tlx = 20 - 9;
+unsigned char tly = 15 - 9;
+unsigned char brx = 20 + 7;
+unsigned char bry = 15 + 7;
+
+unsigned char lblx = 20 - 9;
+unsigned char lbly = 15 + 9;
 
 void draw_colour()
 {
@@ -70,15 +73,16 @@ void draw_colour()
 		hcfr_colour_g[selected_type][selected_colour],
 		hcfr_colour_b[selected_type][selected_colour]);
 
-	panel_shaded(tlx, tly, brx, bry, 17, 18, 19);
+	// panel_shaded(tlx, tly, brx, bry, 17, 18, 19);
 	fill_bgcol(tlx + 1, tly + 1, brx, bry - 1, 16);
 	clear_char_area(0, tlx, bry + 1, brx, bry + 3);
-	write_string(hcfr_type[selected_type], 18, tlx, bry + 1);
-	write_string(hcfr_colour_name[selected_type][selected_colour], 18, tlx, bry + 2);
+
+	write_string(hcfr_type[selected_type], 18, lblx, lbly + 1);
+	write_string(hcfr_colour_name[selected_type][selected_colour], 18, lblx, lbly + 2);
 
 	char temp[30];
 	sprintf(temp, "%03d, %03d, %03d", hcfr_colour_r[selected_type][selected_colour], hcfr_colour_g[selected_type][selected_colour], hcfr_colour_b[selected_type][selected_colour]);
-	write_string(temp, 18, tlx, bry + 3);
+	write_string(temp, 18, lblx, lbly + 3);
 }
 
 #define const_mode_menu 0

@@ -36,6 +36,7 @@ extern char asc_1;
 #define char_dot 27
 #define char_cross 155
 
+#define colour_cga_black 0
 #define colour_cga_darkcyan 3
 #define colour_cga_darkred 4
 #define colour_cga_lightcyan 11
