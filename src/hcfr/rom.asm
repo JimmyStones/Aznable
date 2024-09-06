@@ -1101,15 +1101,15 @@ _app_main::
 	inc	sp
 	call	_clear_chars
 	inc	sp
-;os.c:229: clear_bgcolor(transparent_char);
+;os.c:233: clear_bgcolor(transparent_char);
 	ld	a, #0xff
 	push	af
 	inc	sp
 	call	_clear_bgcolor
 	inc	sp
-;os.c:231: set_default_char_palette();
+;os.c:235: set_default_char_palette();
 	call	_set_default_char_palette
-;os.c:233: set_char_palette(16, 50, 50, 50);
+;os.c:237: set_char_palette(16, 50, 50, 50);
 	ld	de, #0x3232
 	push	de
 	ld	de, #0x3210
@@ -1117,7 +1117,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:235: set_char_palette(17, 255, 255, 255); // White?
+;os.c:239: set_char_palette(17, 255, 255, 255); // White?
 	ld	de, #0xffff
 	push	de
 	ld	de, #0xff11
@@ -1125,7 +1125,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:236: set_char_palette(18, 160, 160, 160); // Grey
+;os.c:240: set_char_palette(18, 160, 160, 160); // Grey
 	ld	de, #0xa0a0
 	push	de
 	ld	de, #0xa012
@@ -1133,7 +1133,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:237: set_char_palette(19, 80, 80, 80);	 // Dark grey
+;os.c:241: set_char_palette(19, 80, 80, 80);	 // Dark grey
 	ld	de, #0x5050
 	push	de
 	ld	de, #0x5013
@@ -1141,7 +1141,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:239: set_char_palette(20, 90, 179, 255); // Light blue
+;os.c:243: set_char_palette(20, 90, 179, 255); // Light blue
 	ld	de, #0xffb3
 	push	de
 	ld	de, #0x5a14
@@ -1149,7 +1149,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:240: set_char_palette(21, 54, 139, 255); // Blue
+;os.c:244: set_char_palette(21, 54, 139, 255); // Blue
 	ld	de, #0xff8b
 	push	de
 	ld	de, #0x3615
@@ -1157,7 +1157,7 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:241: set_char_palette(22, 0, 67, 252);	// Dark blue
+;os.c:245: set_char_palette(22, 0, 67, 252);	// Dark blue
 	ld	de, #0xfc43
 	push	de
 	xor	a, a
@@ -1167,17 +1167,17 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:243: start_mode_menu();
+;os.c:247: start_mode_menu();
 	call	_start_mode_menu
-;os.c:245: while (1)
+;os.c:249: while (1)
 00105$:
-;os.c:247: hsync = input0 & 0x80;
+;os.c:251: hsync = input0 & 0x80;
 	ld	iy, #_input0
 	ld	a, 0 (iy)
 	rlc	a
 	and	a, #0x01
 	ld	(_hsync+0), a
-;os.c:248: vsync = input0 & 0x40;
+;os.c:252: vsync = input0 & 0x40;
 	ld	a, 0 (iy)
 	and	a, #0x40
 	ld	c,a
@@ -1186,7 +1186,7 @@ _app_main::
 	ld	a, #0x00
 	rla
 	ld	(_vsync+0), a
-;os.c:249: hblank = input0 & 0x20;
+;os.c:253: hblank = input0 & 0x20;
 	ld	a, 0 (iy)
 	and	a, #0x20
 	ld	c, a
@@ -1197,7 +1197,7 @@ _app_main::
 	ld	a, #0x00
 	rla
 	ld	(_hblank+0), a
-;os.c:250: vblank = CHECK_BIT(input0, INPUT_VBLANK);
+;os.c:254: vblank = CHECK_BIT(input0, INPUT_VBLANK);
 	ld	a, 0 (iy)
 	and	a, #0x10
 	ld	c, a
@@ -1205,7 +1205,7 @@ _app_main::
 	cp	a, c
 	rla
 	ld	(_vblank+0), a
-;os.c:252: switch (mode)
+;os.c:256: switch (mode)
 	ld	iy, #_mode
 	ld	a, 0 (iy)
 	or	a, a
@@ -1214,43 +1214,43 @@ _app_main::
 	dec	a
 	jr	Z,00102$
 	jr	00103$
-;os.c:254: case const_mode_menu:
+;os.c:258: case const_mode_menu:
 00101$:
-;os.c:255: mode_menu();
+;os.c:259: mode_menu();
 	call	_mode_menu
-;os.c:256: break;
+;os.c:260: break;
 	jr	00103$
-;os.c:257: case const_mode_show:
+;os.c:261: case const_mode_show:
 00102$:
-;os.c:258: mode_show();
+;os.c:262: mode_show();
 	call	_mode_show
-;os.c:260: }
+;os.c:264: }
 00103$:
-;os.c:262: hsync_last = hsync;
+;os.c:266: hsync_last = hsync;
 	ld	a,(#_hsync + 0)
 	ld	iy, #_hsync_last
 	ld	0 (iy), a
-;os.c:263: vsync_last = vsync;
+;os.c:267: vsync_last = vsync;
 	ld	a,(#_vsync + 0)
 	ld	iy, #_vsync_last
 	ld	0 (iy), a
-;os.c:264: hblank_last = hblank;
+;os.c:268: hblank_last = hblank;
 	ld	a,(#_hblank + 0)
 	ld	iy, #_hblank_last
 	ld	0 (iy), a
-;os.c:265: vblank_last = vblank;
+;os.c:269: vblank_last = vblank;
 	ld	a,(#_vblank + 0)
 	ld	iy, #_vblank_last
 	ld	0 (iy), a
-;os.c:267: }
+;os.c:271: }
 	jp	00105$
-;os.c:270: void main()
+;os.c:274: void main()
 ;	---------------------------------
 ; Function main
 ; ---------------------------------
 _main::
-;os.c:272: app_main();
-;os.c:273: }
+;os.c:276: app_main();
+;os.c:277: }
 	jp	_app_main
 	.area _CODE
 	.area _INITIALIZER

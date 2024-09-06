@@ -54,7 +54,7 @@ reg [data_width-1:0] mem [ramLength-1:0];
 always @(posedge clock_a) begin
 	q_a <= mem[address_a];
 	if(wren_a) begin
-		q_a <= data_a;
+		//q_a <= data_a;
 		mem[address_a] <= data_a;
 	end
 end
@@ -62,7 +62,7 @@ end
 always @(posedge clock_b) begin
 	q_b <= mem[address_b];
 	if(wren_b) begin
-		q_b <= data_b;
+		//q_b <= data_b;
 		mem[address_b] <= data_b;
 	end
 end

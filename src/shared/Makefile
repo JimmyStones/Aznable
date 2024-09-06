@@ -1,6 +1,6 @@
 SDCC=sdcc
 CPU=z80
-DATALOC=0xC000
+DATALOC=0x$(WORK_RAM_LOC)
 
 OUT_DIR=build/
 MAIN=os

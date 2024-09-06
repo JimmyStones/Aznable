@@ -165,8 +165,16 @@ wire charpaletteram_cs = cpu_addr >= 16'hAA00 && cpu_addr < 16'hAE00;
 // - Comet (sprite engine)
 wire spriteram_cs = cpu_addr >= 16'hB000 && cpu_addr < 16'hB080;
 wire spritecollisionram_cs = cpu_addr >= 16'hB400 && cpu_addr < 16'hB404;
+
+// - Vulcan (vector engine)
+wire vectorram_cs = cpu_addr >= 16'hC000 && cpu_addr < 16'hD000;
+
+
 // - CPU working RAM
-wire wkram_cs = cpu_addr >= 16'hC000;
+// `ifndef WORK_RAM_LOC
+// 	`define WORK_RAM_LOC 16'hC000
+// `endif
+wire wkram_cs = cpu_addr >= `WORK_RAM_LOC;
 
 // Video control output
 reg [7:0] video_control;
@@ -195,25 +203,19 @@ reg [25:0] frame_timer;
 reg vblank_last;
 always @(posedge clk_24) begin
 	vblank_last <= VGA_VB;
-	if(!VGA_VB && vblank_last)
-	begin
-		//$display("VB ended - %d", frame_timer);
-		frame_timer <= 26'b0;
-	end
-	else
 	if(VGA_VB && !vblank_last)
 	begin
-		//$display("VB started - %d", frame_timer);
 		frame_timer <= 26'b0;
 	end
 	else
 	begin
 		frame_timer <= frame_timer + 26'b1;
 	end
-	//if(pgrom_cs) $display("%x pgrom o %x", cpu_addr, pgrom_data_out);
+	// if(pgrom_cs) $display("%x pgrom o %x", cpu_addr, pgrom_data_out);
 	//if(wkram_cs) $display("%x wkram i %x o %x w %b", cpu_addr, cpu_dout, wkram_data_out, wkram_wr);
 	//if(chram_cs) $display("%x chram i %x o %x w %b", cpu_addr, cpu_dout, chram_data_out, chram_wr);
 	//if(fgcolram_cs) $display("%x fgcolram i %x o %x w %b", cpu_addr, cpu_dout, fgcolram_data_out, fgcolram_wr);
+	//if(vectorram_cs) $display("%x vectorram i %x o %x w %b", cpu_addr, cpu_dout, vectorram_data_out, vectorram_wr);
 	//if(in0_cs) $display("%x in0 i %x o %x", cpu_addr, cpu_dout, in0_data_out);
 	// if(video_ctl_cs) $display("%x video_ctl_cs i %x w %b", cpu_addr, cpu_dout, ~cpu_wr_n);
  	//if(joystick_cs) $display("joystick %b  %b", joystick_bit, joystick_data_out);
@@ -245,6 +247,7 @@ wire [7:0] chram_data_out;
 wire [7:0] fgcolram_data_out;
 wire [7:0] bgcolram_data_out;
 wire [23:0] charpaletteram_data_out;
+wire [7:0] vectorram_data_out;
 
 // RAM data not available to CPU
 wire [7:0] chmap_data_out;
@@ -268,6 +271,7 @@ wire spriteram_wr = !cpu_wr_n && spriteram_cs;
 wire spritecollisionram_wr;
 wire tilemapcontrol_wr = !cpu_wr_n && tilemapcontrol_cs;
 wire tilemapram_wr = !cpu_wr_n && tilemapram_cs;
+wire vectorram_wr = !cpu_wr_n && vectorram_cs;
 
 // CPU data mux
 assign cpu_din = pgrom_cs ? pgrom_data_out :
@@ -277,6 +281,7 @@ assign cpu_din = pgrom_cs ? pgrom_data_out :
 				 bgcolram_cs ? bgcolram_data_out :
 				//  charpaletteram_cs ? charpaletteram_data_out :
 				 spritecollisionram_cs ? {8{spritecollisionram_data_out_cpu}} :
+				 vectorram_cs ? vectorram_data_out : 
 				 in0_cs ? in0_data_out :
 				 joystick_cs ? joystick_data_out :
 				 analog_l_cs ? analog_l_data_out :
@@ -615,11 +620,12 @@ wire [23:0] rgb_starfield = {3{sf_on ? sf_star_colour : 8'b0}};
 wire [23:0] rgb_charmap = { charmap_b, charmap_g, charmap_r };
 wire [23:0] rgb_tilemap = { tilemap_b, tilemap_g, tilemap_r };
 wire [23:0] rgb_sprite = { spr_b, spr_g, spr_r };
+wire [23:0] rgb_vector = { vector_r, vector_g, vector_b };
 
 
 wire [23:0] rgb_core = video_sprite_layer_high ? 
-							(spr_a ? rgb_sprite : charmap_a ? rgb_charmap : tilemap_a ? rgb_tilemap : rgb_starfield) :
-							(charmap_a ? rgb_charmap : spr_a ? rgb_sprite : tilemap_a ? rgb_tilemap : rgb_starfield);
+							(spr_a ? rgb_sprite : charmap_a ? rgb_charmap : tilemap_a ? rgb_tilemap : vector_a ? rgb_vector : rgb_starfield) :
+							(charmap_a ? rgb_charmap : spr_a ? rgb_sprite : tilemap_a ? rgb_tilemap : vector_a ? rgb_vector : rgb_starfield);
 wire [23:0] rgb_final;
 
 
@@ -958,11 +964,302 @@ dpram #(`SPRITE_ROM_WIDTH,8, "sprite.hex") spriterom
 );
 `endif
 
-// Work RAM - 0xC000 - 0xFFFF (0x4000 / 16384 bytes)
-spram #(14,8) wkram
+// Vector RAM - 0xC000 - 0xDFFF (0x2000 / 8192 bytes)
+localparam VECTOR_RAM_WIDTH = 13;
+reg [VECTOR_RAM_WIDTH-1:0] vectorram_sys_addr;
+reg [7:0] vectorram_sys_data_out;
+dpram #(VECTOR_RAM_WIDTH,8) vectorram
+(
+	.clock_a(clk_24),
+	.address_a(cpu_addr[12:0]),
+	.wren_a(vectorram_wr),
+	.data_a(cpu_dout),
+	.q_a(vectorram_data_out),
+
+	.clock_b(clk_24),
+	.address_b(vectorram_sys_addr),
+	.wren_b(),
+	.data_b(),
+	.q_b(vectorram_sys_data_out)
+);
+
+// Vector Framebuffer - (0x10000 / 65,536 bytes)
+// Framebuffer is 256x256 bytes = 65,536
+wire [15:0] vectorframeram_read_addr = { vcnt[7:0], hcnt[7:0] };
+reg vectorframeram_read_wr;
+reg [7:0] vectorframeram_read_data_in;
+wire [7:0] vectorframeram_read_data_out;
+wire [15:0] vectorframeram_write_addr = { vector_draw_y, vector_draw_x };
+reg vectorframeram_write_wr;
+reg [7:0] vectorframeram_write_data_in;
+wire [7:0] vectorframeram_write_data_out;
+dpram #(16,8) vectorframeram
+(
+	.clock_a(clk_24),
+	.address_a(vectorframeram_read_addr),
+	.wren_a(vectorframeram_read_wr),
+	.data_a(vectorframeram_read_data_in),
+	.q_a(vectorframeram_read_data_out),
+
+	.clock_b(clk_24),
+	.address_b(vectorframeram_write_addr),
+	.wren_b(vectorframeram_write_wr),
+	.data_b(vectorframeram_write_data_in),
+	.q_b(vectorframeram_write_data_out)
+);
+
+// VECTOR TEMP
+reg [7:0] vector_gfx_out;
+reg [1:0] vector_cycle = 0;
+reg ce_6_last;
+always @(posedge clk_24)
+begin
+	// if(vector_timer_last>0) 
+	// begin
+	// 	$display("ce_6: %d c=%d h=%x v=%d  vfw=%d vdo=%d", ce_6, vector_cycle, hcnt, vcnt, vectorframeram_read_wr, vectorframeram_read_data_out);
+	// end
+	ce_6_last <= ce_6;
+	case(vector_cycle)
+		0:
+		begin
+			vectorframeram_read_wr <= 0;
+		end
+		1:
+		begin
+			vector_gfx_out <= vectorframeram_read_data_out;
+		end
+		2:
+		begin
+			vectorframeram_read_data_in <= 0;
+			vectorframeram_read_wr <= 1;
+		end
+		3:
+		begin
+
+		end
+	endcase
+	vector_cycle <= vector_cycle + 1;
+
+	if(ce_6 && !ce_6_last)
+	begin
+		vector_cycle <= 0;
+	end
+end
+wire [7:0]	vector_r = vector_gfx_out;
+wire [7:0]	vector_g = vector_gfx_out;
+wire [7:0]	vector_b = vector_gfx_out;
+wire 		vector_a = vector_gfx_out != 0 && hcnt<256 && vcnt<256;
+
+localparam VECTOR_STATE_WIDTH = 5;
+reg [VECTOR_STATE_WIDTH-1:0]	vector_state = VEC_RESET;
+reg [VECTOR_STATE_WIDTH-1:0]	vector_state_next;
+localparam VECTOR_POINTS_MAX = 16;
+reg [7:0]	vector_point_loadindex;
+reg [7:0]	vector_point_drawindex;
+reg [7:0]	vector_line_index = 0;
+reg [7:0]	vector_line_length = 0;
+reg [3:0]	vector_line_intensity = 0;
+reg [3:0]	vector_line_colour = 0;
+localparam VECTOR_POINT_WIDTH = 8;
+reg [(VECTOR_POINTS_MAX * VECTOR_POINT_WIDTH)-1:0]	vector_points_x;
+reg [(VECTOR_POINTS_MAX * VECTOR_POINT_WIDTH)-1:0]	vector_points_y;
+
+wire [VECTOR_POINT_WIDTH-1:0] vector_point_x0 = vector_points_x[(vector_point_drawindex*8)+:8];
+wire [VECTOR_POINT_WIDTH-1:0] vector_point_x1 = vector_points_x[((vector_point_drawindex+1)*8)+:8];
+wire [VECTOR_POINT_WIDTH-1:0] vector_point_y0 = vector_points_y[(vector_point_drawindex*8)+:8];
+wire [VECTOR_POINT_WIDTH-1:0] vector_point_y1 = vector_points_y[((vector_point_drawindex+1)*8)+:8];
+
+reg signed [VECTOR_POINT_WIDTH:0] vector_draw_dx;
+reg signed [VECTOR_POINT_WIDTH:0] vector_draw_dy;
+reg vector_draw_right, vector_draw_down;  
+
+reg [VECTOR_POINT_WIDTH-1:0] vector_draw_x;
+reg [VECTOR_POINT_WIDTH-1:0] vector_draw_y;
+
+reg vector_move_x;
+reg vector_move_y;
+reg signed [VECTOR_POINT_WIDTH:0] vector_err;
+reg signed [VECTOR_POINT_WIDTH:0] vector_derr;
+
+// State machine constants
+localparam VEC_WAITFORVB = 0;
+localparam VEC_RESET = 1;
+localparam VEC_STARTLOAD = 2;
+localparam VEC_GETATTRIBUTES = 3;
+localparam VEC_GETPOINTX = 4;
+localparam VEC_GETPOINTY = 5;
+localparam VEC_STARTDRAW = 6;
+localparam VEC_DRAW = 7;
+localparam VEC_ENDDRAW = 8;
+localparam VEC_WAIT = {VECTOR_STATE_WIDTH{1'b1}};
+
+reg [15:0] vector_timer = 0;
+reg [15:0] vector_timer_last = 0;
+
+always @(posedge clk_24) 
+begin
+	
+	vector_timer <= vector_timer + 1;
+
+	case (vector_state)
+	VEC_WAIT:
+	begin
+		vector_state <= vector_state_next;
+	end
+	VEC_WAITFORVB:
+	begin
+		// Wait for vblank
+		if(VGA_VB && !vblank_last)
+		begin
+			$display("VEC_PASS_FINISHED %d / %d", vector_timer, frame_timer);
+			vector_timer <= 0;
+			vector_state <= VEC_RESET;
+		end
+	end
+	VEC_RESET:
+	begin
+		// Reset vector renderer
+		//$display("VEC_RESET");
+		vectorram_sys_addr <= 0;
+		vector_point_loadindex <= 0;
+		vector_line_index <= 0;
+		vector_state_next <= VEC_STARTLOAD;
+		vector_state <= VEC_WAIT;
+	end
+	VEC_STARTLOAD:
+	begin
+		// Start a new line -> first check for line length
+		if(vectorram_sys_data_out>0)
+		begin
+			vector_point_loadindex <= 0;
+			vector_line_index <= vector_line_index + 1;
+			vector_line_length <= vectorram_sys_data_out;
+			vectorram_sys_addr <= vectorram_sys_addr + 1;
+			//$display("VEC_STARTLOAD: vector_line_length: %d", vectorram_sys_data_out);
+			vector_state_next <= VEC_GETATTRIBUTES;
+			vector_state <= VEC_WAIT;
+		end
+		else
+		begin
+			//$display("VEC_STARTLOAD: NO MORE LINES");
+			vector_timer_last <= vector_timer;
+			vector_state <= VEC_WAITFORVB;
+		end
+	end
+	VEC_GETATTRIBUTES:
+	begin
+		// Start a new line -> first check for line length
+		vector_line_intensity <= vectorram_sys_data_out[3:0];
+		vector_line_colour <= vectorram_sys_data_out[7:4];
+		vectorram_sys_addr <= vectorram_sys_addr + 1;
+		$display("VEC_GETATTRIBUTES: vector_line_intensity: %d vector_line_colour: %d", vectorram_sys_data_out[3:0], vectorram_sys_data_out[7:4]);
+		vector_state_next <= VEC_GETPOINTX;
+		vector_state <= VEC_WAIT;
+	end
+	VEC_GETPOINTX:
+	begin
+		// Add next X position to points
+		vector_points_x[(vector_point_loadindex*8)+:8] <= vectorram_sys_data_out;
+		vectorram_sys_addr <= vectorram_sys_addr + 1;
+		//$display("VEC_GETPOINTX: vector_point_loadindex: %d x: %d", vector_point_loadindex, vectorram_sys_data_out);
+		vector_state_next <= VEC_GETPOINTY;
+		vector_state <= VEC_WAIT;
+	end
+	VEC_GETPOINTY:
+	begin
+		// Add next X position to points
+		vector_points_y[(vector_point_loadindex*8)+:8] <= vectorram_sys_data_out;
+		vectorram_sys_addr <= vectorram_sys_addr + 1;
+		//$display("VEC_GETPOINTY: vector_point_loadindex: %d y: %d", vector_point_loadindex, vectorram_sys_data_out);
+		if(vector_point_loadindex == vector_line_length)
+		begin
+			vector_point_drawindex <= 0;
+			vector_state <= VEC_STARTDRAW;
+		end
+		else
+		begin
+			vector_point_loadindex <= vector_point_loadindex + 1;
+			vector_state_next <= VEC_GETPOINTX;
+			vector_state <= VEC_WAIT;
+		end
+	end
+	VEC_STARTDRAW:
+	begin
+		// Calculate deltas for this pair of points
+	    vector_draw_right = vector_point_x0 < vector_point_x1;
+	    vector_draw_down  = vector_point_y0 < vector_point_y1;
+	    vector_draw_dx = vector_draw_right ? vector_point_x1 - vector_point_x0 : vector_point_x0 - vector_point_x1;
+	    vector_draw_dy = vector_draw_down  ? vector_point_y0 - vector_point_y1 : vector_point_y1 - vector_point_y0;
+		vector_draw_x <= vector_point_x0;
+		vector_draw_y <= vector_point_y0;
+		vector_err <= vector_draw_dx + vector_draw_dy;
+		vector_derr = 0;
+
+		// Start drawing line segment
+		$display("VEC_STARTDRAW - l=%d p=%d/%d - %d,%d > %d,%d", vector_line_index, vector_point_drawindex, vector_line_length, vector_point_x0, vector_point_y0, vector_point_x1, vector_point_y1);
+
+		// Load the next line
+		vector_state <= VEC_DRAW;
+	end
+	VEC_DRAW:
+	begin
+		// Start drawing line segment
+		vectorframeram_write_wr = 1'b1;
+		vectorframeram_write_data_in = 8'hFF;
+
+		if(vector_draw_x == vector_point_x1 && vector_draw_y == vector_point_y1)
+		begin
+			if(vector_point_drawindex == vector_line_length - 1)
+			begin
+				// This segment is done
+				vector_state <= VEC_ENDDRAW;
+			end
+			else
+			begin
+				vector_point_drawindex <= vector_point_drawindex + 1;
+				vector_state <= VEC_STARTDRAW;
+			end
+		end
+		else
+		begin
+			vector_move_x = (2*vector_err >= vector_draw_dy);
+			vector_move_y = (2*vector_err <= vector_draw_dx);
+        	vector_derr = vector_move_x ? vector_draw_dy : 0;
+        	if (vector_move_y) vector_derr = vector_derr + vector_draw_dx;
+			if(vector_move_x) vector_draw_x <= vector_draw_x + (vector_draw_right ? 1 : -1);
+			if(vector_move_y) vector_draw_y <= vector_draw_y + (vector_draw_down ? 1 : -1);
+			vector_err <= vector_err + vector_derr;
+		end
+
+		//$display("VEC_DRAW - l=%d p=%d - right=%d down=%d dx=%d dy=%d x=%d y=%d", vector_line_index, vector_point_drawindex, vector_draw_right, vector_draw_down, vector_draw_dx, vector_draw_dy, vector_draw_x, vector_draw_y);
+		// $display("VEC_DRAW - err=%d derr=%d", vector_err, vector_derr);		
+
+	end
+	VEC_ENDDRAW:
+	begin
+		// Finish drawing line segment
+		//$display("VEC_ENDDRAW - l=%d p=%d - x=%d y=%d", vector_line_index, vector_point_drawindex, vector_draw_x, vector_draw_y);
+
+		vectorframeram_write_wr = 1'b0;
+
+		// Load the next line
+		vector_state <= VEC_STARTLOAD;
+	end
+
+	endcase
+
+	//$display("h=%d v=%d vec_addr=%d vec_out=%d", hcnt, vcnt, vectorframeram_read_addr, vectorframeram_read_data_out);
+
+end
+
+
+// END VECTOR TEMP
+
+// Work RAM - 0xE000 - 0xFFFF (0x2000 / 8192 bytes)
+spram #(13,8) wkram
 (
 	.clock(clk_24),
-	.address(cpu_addr[13:0]),
+	.address(cpu_addr[12:0]),
 	.wren(wkram_wr),
 	.data(cpu_dout),
 	.q(wkram_data_out)
