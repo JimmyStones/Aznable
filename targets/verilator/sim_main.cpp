@@ -337,12 +337,12 @@ int main(int argc, char** argv, char** env) {
 		//ImGui::Begin("Sound ROM");
 		//mem_edit.DrawContents(&top->emu__DOT__system__DOT__soundrom__DOT__mem, 64000, 0);
 		//ImGui::End();
-		ImGui::Begin("Vector RAM");
-		mem_edit.DrawContents(&top->emu__DOT__system__DOT__vectorram__DOT__mem, 8192, 0);
-		ImGui::End();
-		ImGui::Begin("Vector Frame RAM");
-		mem_edit.DrawContents(&top->emu__DOT__system__DOT__vectorframeram__DOT__mem, 65536, 0);
-		ImGui::End();
+		//ImGui::Begin("Vector RAM");
+		//mem_edit.DrawContents(&top->emu__DOT__system__DOT__vectorram__DOT__mem, 8192, 0);
+		//ImGui::End();
+		//ImGui::Begin("Vector Frame RAM");
+		//mem_edit.DrawContents(&top->emu__DOT__system__DOT__vectorframeram__DOT__mem, 65536, 0);
+		//ImGui::End();
 
 		int windowX = 550;
 		int windowWidth = (VGA_WIDTH * VGA_SCALE_X) + 24;

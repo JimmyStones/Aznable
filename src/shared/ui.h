@@ -81,6 +81,9 @@ extern void write_stringf_short(const char *format, char color, unsigned char x,
 // Write formatted string to character RAM (unsigned long data)
 extern void write_stringf_ulong(const char *format, char color, unsigned char x, unsigned char y, unsigned long data);
 
+// Write formatted string to character RAM (float data)
+extern void write_stringf_float(const char *format, char color, unsigned char x, unsigned char y, float data);
+
 // Write single char to character RAM and colour RAM
 extern void write_char(unsigned char c, char color, unsigned char x, unsigned char y);
 

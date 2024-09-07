@@ -33,6 +33,7 @@
 	.globl _loader
 	.globl _set_default_char_palette
 	.globl _set_char_palette
+	.globl _vectorram
 	.globl _spritecollisionram
 	.globl _spriteram
 	.globl _charpaletteram
@@ -92,6 +93,7 @@ _bgcolram	=	0xa200
 _charpaletteram	=	0xaa00
 _spriteram	=	0xb000
 _spritecollisionram	=	0xb400
+_vectorram	=	0xc000
 ;--------------------------------------------------------
 ; ram data
 ;--------------------------------------------------------

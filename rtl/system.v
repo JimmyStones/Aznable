@@ -200,17 +200,13 @@ always @(posedge clk_24) begin
 end
 
 reg [25:0] frame_timer;
+reg [25:0] blank_timer;
 reg vblank_last;
 always @(posedge clk_24) begin
 	vblank_last <= VGA_VB;
-	if(VGA_VB && !vblank_last)
-	begin
-		frame_timer <= 26'b0;
-	end
-	else
-	begin
-		frame_timer <= frame_timer + 26'b1;
-	end
+	frame_timer <= (VGA_VB && !vblank_last) ? 26'b0 : frame_timer + 26'b1;
+	blank_timer <= (VGA_VB && !vblank_last) ? 26'b0 : VGA_VB ? blank_timer + 26'b1 : blank_timer;
+
 	// if(pgrom_cs) $display("%x pgrom o %x", cpu_addr, pgrom_data_out);
 	//if(wkram_cs) $display("%x wkram i %x o %x w %b", cpu_addr, cpu_dout, wkram_data_out, wkram_wr);
 	//if(chram_cs) $display("%x chram i %x o %x w %b", cpu_addr, cpu_dout, chram_data_out, chram_wr);
@@ -1019,36 +1015,43 @@ begin
 	// 	$display("ce_6: %d c=%d h=%x v=%d  vfw=%d vdo=%d", ce_6, vector_cycle, hcnt, vcnt, vectorframeram_read_wr, vectorframeram_read_data_out);
 	// end
 	ce_6_last <= ce_6;
-	case(vector_cycle)
-		0:
-		begin
-			vectorframeram_read_wr <= 0;
-		end
-		1:
-		begin
-			vector_gfx_out <= vectorframeram_read_data_out;
-		end
-		2:
-		begin
-			vectorframeram_read_data_in <= 0;
-			vectorframeram_read_wr <= 1;
-		end
-		3:
-		begin
-
-		end
-	endcase
-	vector_cycle <= vector_cycle + 1;
-
-	if(ce_6 && !ce_6_last)
+	if(hcnt<256 && vcnt<256)
 	begin
-		vector_cycle <= 0;
+		case(vector_cycle)
+			0:
+			begin
+				vectorframeram_read_wr <= 0;
+			end
+			1:
+			begin
+				vector_gfx_out <= vectorframeram_read_data_out;
+			end
+			2:
+			begin
+				vectorframeram_read_data_in <= vector_gfx_out << 1;
+				vectorframeram_read_wr <= 1;
+			end
+			3:
+			begin
+				vectorframeram_read_wr <= 0;
+			end
+		endcase
+		vector_cycle <= vector_cycle + 1;
+
+		if(ce_6 && !ce_6_last)
+		begin
+			vector_cycle <= 0;
+		end
+	end
+	else
+	begin
+		vector_gfx_out <= 0;
 	end
 end
 wire [7:0]	vector_r = vector_gfx_out;
 wire [7:0]	vector_g = vector_gfx_out;
 wire [7:0]	vector_b = vector_gfx_out;
-wire 		vector_a = vector_gfx_out != 0 && hcnt<256 && vcnt<256;
+wire 		vector_a = vector_gfx_out != 0;
 
 localparam VECTOR_STATE_WIDTH = 5;
 reg [VECTOR_STATE_WIDTH-1:0]	vector_state = VEC_RESET;
@@ -1111,7 +1114,7 @@ begin
 		// Wait for vblank
 		if(VGA_VB && !vblank_last)
 		begin
-			$display("VEC_PASS_FINISHED %d / %d", vector_timer, frame_timer);
+			$display("VEC_PASS_FINISHED in %d / last frame=%d last blank=%d", vector_timer, frame_timer, blank_timer);
 			vector_timer <= 0;
 			vector_state <= VEC_RESET;
 		end

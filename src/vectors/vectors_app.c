@@ -25,6 +25,8 @@
 #include <math.h>
 #include <float.h>
 
+#define M_PI       3.14159265358979323846   // pi
+
 unsigned short count = 0;
 
 unsigned short temp[1024];
@@ -47,6 +49,25 @@ void add_point(unsigned char x, unsigned char y)
 	v++;
 }
 
+void generatePolygon(unsigned char centerX, unsigned char centerY, unsigned char radius, unsigned char numPoints)
+{
+	write_string("generatePolygon", colour_cga_yellow, 0,0);
+
+	add_line(numPoints, 16, 1);
+	float angleStep = 2 * M_PI / numPoints;
+
+	write_stringf_float("anglestep=%f", colour_cga_yellow, 1,1, angleStep);
+
+	for (unsigned char i = 0; i < numPoints; i++)
+	{
+		float xd = radius * cosf(i * angleStep);
+		float yd = radius * sinf(i * angleStep);
+		unsigned char x = centerX + xd;
+		unsigned char y = centerY + yd;
+		add_point(x, y);
+	}
+}
+
 void app_main()
 {
 	chram_size = chram_cols * chram_rows;
@@ -61,21 +82,23 @@ void app_main()
 	add_point(16, 32);
 	add_point(16, 16);
 
+	generatePolygon(100, 100, 15, 6);
+
 	// add_line(3, 10, 1);
 	// add_point(50, 20);
 	// add_point(60, 120);
 	// add_point(40, 120);
-	// add_point(50, 20);
+	// // add_point(50, 20);
 
-	add_line(2, 10, 1);
-	add_point(5,100);
-	add_point(190, 120);
-	add_point(5,70);
+	// add_line(2, 10, 1);
+	// add_point(5, 100);
+	// add_point(190, 120);
+	// add_point(5, 70);
 
-	add_line(2, 10, 1);
-	add_point(45, 120);
-	add_point(220, 140);
-	add_point(45, 90);
+	// add_line(2, 10, 1);
+	// add_point(45, 120);
+	// add_point(220, 140);
+	// add_point(45, 90);
 
 	while (1)
 	{
