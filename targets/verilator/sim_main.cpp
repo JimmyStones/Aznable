@@ -30,7 +30,7 @@ using namespace std;
 // ------------------
 int initialReset = 48;
 bool run_enable = 1;
-int batchSize = 100;
+int batchSize = 150000;
 bool single_step = 0;
 bool multi_step = 0;
 int multi_step_amount = 1024;

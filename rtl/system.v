@@ -117,18 +117,46 @@ generic_timer #(16,15,24) ms_timer
 `else
 	wire debug = 1'b0;
 `endif
-wire [7:0] in0_data_out = {VGA_HS, VGA_VS,VGA_HB, VGA_VB, 2'b10, menu, debug};
-wire [7:0] joystick_data_out = joystick[{cpu_addr[4:0],3'd0} +: 8];
-wire [7:0] analog_l_data_out = analog_l[{cpu_addr[3:0],3'd0} +: 8];
-wire [7:0] analog_r_data_out = analog_r[{cpu_addr[3:0],3'd0} +: 8];
-wire [7:0] paddle_data_out = paddle[{cpu_addr[2:0],3'd0} +: 8];
-wire [7:0] spinner_data_out = spinner[{cpu_addr[3:0],3'd0} +: 8];
-wire [7:0] ps2_key_data_out = ps2_key[{cpu_addr[0],3'd0} +: 8];
-wire [7:0] ps2_mouse_data_out = ps2_mouse[{cpu_addr[2:0],3'd0} +: 8];
-wire [7:0] timestamp_data_out = timestamp[{cpu_addr[2:0],3'd0} +: 8];
-wire [7:0] timer_data_out = timer[{cpu_addr[0],3'd0} +: 8];
-wire [7:0] tilemapcontrol_data_out;
-wire [7:0] music_data_out;
+
+localparam MAP_TIMESTAMP_START = 16'h8002;
+localparam MAP_TIMER_START = 16'h802A;
+localparam MAP_JOYSTICK_START = 16'h803A;
+localparam MAP_ANALOG_L_START = 16'h80FA;
+localparam MAP_ANALOG_R_START = 16'h815A;
+localparam MAP_PADDLE_START = 16'h81BA;
+localparam MAP_SPINNER_START = 16'h81EA;
+localparam MAP_PS2_KEY_START = 16'h824A;
+localparam MAP_PS2_MOUSE_START = 16'h8256;
+localparam MAP_STARFIELD1_START = 16'h8286;
+localparam MAP_STARFIELD2_START = 16'h8296;
+localparam MAP_STARFIELD3_START = 16'h82A6;
+localparam MAP_SYSTEMPAUSE_START = 16'h82B6;
+localparam MAP_SYSTEMMENU_START = 16'h82B7;
+localparam MAP_SOUND_START = 16'h8300;
+localparam MAP_MUSIC_START = 16'h8310;
+localparam MAP_VECTOR_START = 16'h8320;
+
+wire [7:0]	in0_data_out = {VGA_HS, VGA_VS,VGA_HB, VGA_VB, 2'b10, menu, debug};
+wire [15:0]	timestamp_addr = (cpu_addr - MAP_TIMESTAMP_START);
+wire [7:0]	timestamp_data_out = timestamp[{timestamp_addr[2:0],3'd0} +: 8];
+wire [15:0]	timer_addr = (cpu_addr - MAP_TIMER_START);
+wire [7:0]	timer_data_out = timer[{timer_addr[0],3'd0} +: 8];
+wire [15:0]	joystick_addr = (cpu_addr - MAP_JOYSTICK_START);
+wire [7:0]	joystick_data_out = joystick[{joystick_addr[4:0],3'd0} +: 8];
+wire [15:0] analog_l_addr = (cpu_addr - MAP_ANALOG_L_START);
+wire [7:0]	analog_l_data_out = analog_l[{analog_l_addr[3:0],3'd0} +: 8];
+wire [15:0] analog_r_addr = (cpu_addr - MAP_ANALOG_R_START);
+wire [7:0]	analog_r_data_out = analog_r[{analog_r_addr[3:0],3'd0} +: 8];
+wire [15:0] paddle_addr = (cpu_addr - MAP_PADDLE_START);
+wire [7:0]	paddle_data_out = paddle[{paddle_addr[2:0],3'd0} +: 8];
+wire [15:0] spinner_addr = (cpu_addr - MAP_SPINNER_START);
+wire [7:0]	spinner_data_out = spinner[{spinner_addr[3:0],3'd0} +: 8];
+wire [15:0] ps2_key_addr = (cpu_addr - MAP_PS2_KEY_START);
+wire [7:0]	ps2_key_data_out = ps2_key[{ps2_key_addr[0],3'd0} +: 8];
+wire [15:0] ps2_mouse_addr = (cpu_addr - MAP_PS2_MOUSE_START);
+wire [7:0]	ps2_mouse_data_out = ps2_mouse[{ps2_mouse_addr[2:0],3'd0} +: 8];
+wire [7:0]	tilemapcontrol_data_out;
+wire [7:0]	music_data_out;
 
 // CPU address decodes
 // - Program ROM
@@ -137,22 +165,26 @@ wire pgrom_cs = cpu_addr[15] == 1'b0;
 wire [7:0] memory_map_addr = cpu_addr[15:8];
 wire in0_cs = cpu_addr == 16'h8000;
 wire video_ctl_cs = cpu_addr == 16'h8001;
-wire timestamp_cs = cpu_addr >= 16'h8080 && cpu_addr < 16'h80A0;
-wire timer_cs = cpu_addr >= 16'h80C0 && cpu_addr < 16'h80D0;
-wire joystick_cs = cpu_addr >= 16'h8100 && cpu_addr < 16'h81C0;
-wire analog_l_cs = cpu_addr >= 16'h8200 && cpu_addr < 16'h8260;
-wire analog_r_cs = cpu_addr >= 16'h8280 && cpu_addr < 16'h82E0;
-wire paddle_cs = cpu_addr >= 16'h8300 && cpu_addr < 16'h8330;
-wire spinner_cs = cpu_addr >= 16'h8380 && cpu_addr < 16'h83E0;
-wire ps2_key_cs = cpu_addr >= 16'h8400 && cpu_addr < 16'h840C;
-wire ps2_mouse_cs = cpu_addr >= 16'h8480 && cpu_addr < 16'h84B0;
-wire starfield1_cs = cpu_addr >= 16'h8500 && cpu_addr < 16'h8510;
-wire starfield2_cs = cpu_addr >= 16'h8510 && cpu_addr < 16'h8520;
-wire starfield3_cs = cpu_addr >= 16'h8520 && cpu_addr < 16'h8530;
-wire system_pause_cs = cpu_addr == 16'h8530;
-wire system_menu_cs = cpu_addr == 16'h8531;
-wire sound_cs = cpu_addr >= 16'h8580 && cpu_addr < 16'h8590;
-wire music_cs = cpu_addr >= 16'h8590 && cpu_addr < 16'h8594;
+wire timestamp_cs = cpu_addr >= MAP_TIMESTAMP_START && cpu_addr < MAP_TIMER_START;
+wire timer_cs = cpu_addr >= MAP_TIMER_START && cpu_addr < MAP_JOYSTICK_START;
+wire joystick_cs = cpu_addr >= MAP_JOYSTICK_START && cpu_addr < MAP_ANALOG_L_START;
+wire analog_l_cs = cpu_addr >= MAP_ANALOG_L_START && cpu_addr < MAP_ANALOG_R_START;
+wire analog_r_cs = cpu_addr >= MAP_ANALOG_R_START && cpu_addr < MAP_PADDLE_START;
+wire paddle_cs = cpu_addr >= MAP_PADDLE_START && cpu_addr < MAP_SPINNER_START;
+wire spinner_cs = cpu_addr >= MAP_SPINNER_START && cpu_addr < MAP_PS2_KEY_START;
+wire ps2_key_cs = cpu_addr >= MAP_PS2_KEY_START && cpu_addr < MAP_PS2_MOUSE_START;
+wire ps2_mouse_cs = cpu_addr >= MAP_PS2_MOUSE_START && cpu_addr < MAP_STARFIELD1_START;
+wire starfield1_cs = cpu_addr >= MAP_STARFIELD1_START && cpu_addr < MAP_STARFIELD2_START;
+wire starfield2_cs = cpu_addr >= MAP_STARFIELD2_START && cpu_addr < MAP_STARFIELD3_START;
+wire starfield3_cs = cpu_addr >= MAP_STARFIELD3_START && cpu_addr < MAP_SYSTEMPAUSE_START;
+wire system_pause_cs = cpu_addr == MAP_SYSTEMPAUSE_START;
+wire system_menu_cs = cpu_addr == MAP_SYSTEMMENU_START;
+
+wire sound_cs = cpu_addr >= MAP_SOUND_START && cpu_addr < MAP_MUSIC_START;
+wire music_cs = cpu_addr >= MAP_MUSIC_START && cpu_addr < MAP_MUSIC_START + 4;
+
+// - Vulcan (vector engine)
+wire vectorram_cs = cpu_addr >= MAP_VECTOR_START && cpu_addr < MAP_VECTOR_START + 512;
 
 // - Zechs (tile map)
 wire tilemapcontrol_cs = cpu_addr >= 16'h8600 && cpu_addr < 16'h8610;
@@ -166,11 +198,9 @@ wire charpaletteram_cs = cpu_addr >= 16'hAA00 && cpu_addr < 16'hAE00;
 wire spriteram_cs = cpu_addr >= 16'hB000 && cpu_addr < 16'hB080;
 wire spritecollisionram_cs = cpu_addr >= 16'hB400 && cpu_addr < 16'hB404;
 
-// - Vulcan (vector engine)
-wire vectorram_cs = cpu_addr >= 16'hC000 && cpu_addr < 16'hE000;
 
 // - CPU working RAM
-wire wkram_cs = cpu_addr >= `WORK_RAM_LOC;
+wire wkram_cs = cpu_addr >= 16'hC000;
 
 // Video control output
 reg [7:0] video_control;
@@ -207,11 +237,11 @@ always @(posedge clk_24) begin
 	frame_timer <= (VGA_VB && !vblank_last) ? 26'b0 : frame_timer + 26'b1;
 	blank_timer <= (VGA_VB && !vblank_last) ? 26'b0 : VGA_VB ? blank_timer + 26'b1 : blank_timer;
 
-	if(pgrom_cs) $display("%d) %x pgrom o %x", cycle_timer, cpu_addr, pgrom_data_out);
-	if(wkram_cs) $display("%d) %x wkram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, wkram_data_out, wkram_wr);
+	//if(pgrom_cs) $display("%d) %x pgrom o %x", cycle_timer, cpu_addr, pgrom_data_out);
+	//if(wkram_cs) $display("%d) %x wkram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, wkram_data_out, wkram_wr);
 	if(chram_cs) $display("%d) %x chram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, chram_data_out, chram_wr);
 	//if(fgcolram_cs) $display("%x fgcolram i %x o %x w %b", cpu_addr, cpu_dout, fgcolram_data_out, fgcolram_wr);
-	//if(vectorram_cs) $display("%x vectorram i %x o %x w %b", cpu_addr, cpu_dout, vectorram_data_out, vectorram_wr);
+	if(vectorram_cs && vectorram_wr) $display("%x vectorram i %x o %x w %b", cpu_addr, cpu_dout, vectorram_data_out, vectorram_wr);
 	//if(in0_cs) $display("%x in0 i %x o %x", cpu_addr, cpu_dout, in0_data_out);
 	// if(video_ctl_cs) $display("%x video_ctl_cs i %x w %b", cpu_addr, cpu_dout, ~cpu_wr_n);
  	//if(joystick_cs) $display("joystick %b  %b", joystick_bit, joystick_data_out);
@@ -961,13 +991,14 @@ dpram #(`SPRITE_ROM_WIDTH,8, "sprite.hex") spriterom
 `endif
 
 // Vector RAM - 0xC000 - 0xDFFF (0x2000 / 8192 bytes)
-localparam VECTOR_RAM_WIDTH = 13;
+localparam VECTOR_RAM_WIDTH = 9;
+wire [15:0] vectorram_cpu_addr = cpu_addr - MAP_VECTOR_START;
 reg [VECTOR_RAM_WIDTH-1:0] vectorram_sys_addr;
 reg [7:0] vectorram_sys_data_out;
 dpram #(VECTOR_RAM_WIDTH,8) vectorram
 (
 	.clock_a(clk_24),
-	.address_a(cpu_addr[12:0]),
+	.address_a(vectorram_cpu_addr[8:0]),
 	.wren_a(vectorram_wr),
 	.data_a(cpu_dout),
 	.q_a(vectorram_data_out),
@@ -1258,12 +1289,11 @@ end
 
 // END VECTOR TEMP
 
-// Work RAM - 0xE000 - 0xFFFF (0x2000 / 8192 bytes)
-wire [15:0] wkram_addr = cpu_addr - `WORK_RAM_LOC;
-spram #(13,8) wkram
+// Work RAM - 0xC000 - 0xFFFF (0x4000 / 16384 bytes)
+spram #(14,8) wkram
 (
 	.clock(clk_24),
-	.address(wkram_addr[12:0]),
+	.address(cpu_addr[13:0]),
 	.wren(wkram_wr),
 	.data(cpu_dout),
 	.q(wkram_data_out)

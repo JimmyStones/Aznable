@@ -22,93 +22,80 @@
 #include "../shared/sys.h"
 #include "../shared/ui.h"
 #include "vectors_app.h"
-#include <math.h>
+// #include <math.h>
 // #include <float.h>
 
-//#define M_PI 3.14159265358979323846 // pi
+// #define M_PI 3.14159265358979323846 // pi
 
-//unsigned char v = 0;
+unsigned char v = 0;
 
-// void add_line(unsigned char length, unsigned char intensity, unsigned char colour)
-// {
-// 	vectorram[v] = length;
-// 	v++;
-// 	vectorram[v] = (intensity) + (colour << 4);
-// 	v++;
-// }
+void add_line(unsigned char length, unsigned char intensity, unsigned char colour)
+{
+	vectorram[v] = length;
+	v++;
+	vectorram[v] = (intensity) + (colour << 4);
+	v++;
+}
 
-// void add_point(unsigned char x, unsigned char y)
-// {
-// 	vectorram[v] = x;
-// 	v++;
-// 	vectorram[v] = y;
-// 	v++;
-// }
+void add_point(unsigned char x, unsigned char y)
+{
+	vectorram[v] = x;
+	v++;
+	vectorram[v] = y;
+	v++;
+}
 
-// void generatePolygon(unsigned char centerX, unsigned char centerY, unsigned char radius, unsigned char numPoints)
-// {
-// 	write_stringf("gp %d", colour_cga_yellow, 0, 1, numPoints);
+void gen_poly(unsigned char cx, unsigned char cy, unsigned char r, unsigned char l)
+{
+	write_string("what?", colour_cga_yellow, 1, 1);
+	//write_stringf("what?", colour_cga_darkred, 1, 2, l);
+	// add_line(l, 16, 1);
+	// float angleStep = 2 * M_PI / l;
 
-// 	add_line(numPoints, 16, 1);
-// 	float angleStep = 2 * M_PI / numPoints;
+	//write_stringf_float("gp %d", colour_cga_yellow, 0, 2, angleStep);
 
-// 	for (unsigned char i = 0; i < numPoints; i++)
-// 	{
-// 		float xd = radius * cosf(i * angleStep);
-// 		float yd = radius * sinf(i * angleStep);
-// 		unsigned char x = centerX + xd;
-// 		unsigned char y = centerY + yd;
-// 		add_point(x, y);
-// 	}
-// }
+	// for (unsigned char i = 0; i < l; i++)
+	// {
+	// 	float xd = r * cosf(i * angleStep);
+	// 	float yd = r * sinf(i * angleStep);
+	// 	unsigned char x = cx + xd;
+	// 	unsigned char y = cy + yd;
+	// 	add_point(x, y);
+	// }
+}
 
 void app_main()
 {
-	// chram_size = chram_cols * chram_rows;
-	// clear_bgcolor(transparent_char);
-	// set_default_char_palette();
+	chram_size = chram_cols * chram_rows;
+	clear_bgcolor(transparent_char);
+	set_default_char_palette();
 
-	chram[0] = 'w';
-	chram[1] = 'h';
-	chram[2] = 'a';
-	chram[3] = 't';
+	add_line(4, 10, 1);
+	add_point(16, 16);
+	add_point(32, 16);
+	add_point(32, 32);
+	add_point(16, 32);
+	add_point(16, 16);
 
-	char temp[16];
-	temp[0] = 'i';
-	temp[2] = 'd';
-	temp[3] = 'o';
-	temp[4] = 'n';
-	temp[5] = 't';
+	// gen_poly(100, 100, 15, 6);
+	
+	write_string("what?", colour_cga_yellow, 1, 1);
 
-	chram[0] = sprintf(temp, "%d", 1);
+	// add_line(3, 10, 1);
+	// add_point(50, 20);
+	// add_point(60, 120);
+	// add_point(40, 120);
+	// // add_point(50, 20);
 
-	// // add_line(4, 10, 1);
-	// // add_point(16, 16);
-	// // add_point(32, 16);
-	// // add_point(32, 32);
-	// // add_point(16, 32);
-	// // add_point(16, 16);
+	// add_line(2, 10, 1);
+	// add_point(5, 100);
+	// add_point(190, 120);
+	// add_point(5, 70);
 
-	// //write_string("gp %d", colour_cga_yellow, 0, 1);
-	// //write_stringf("gp %d", colour_cga_yellow, 0, 1, 5);
-
-	// //generatePolygon(100, 100, 15, 6);
-
-	// // // add_line(3, 10, 1);
-	// // // add_point(50, 20);
-	// // // add_point(60, 120);
-	// // // add_point(40, 120);
-	// // // // add_point(50, 20);
-
-	// // // add_line(2, 10, 1);
-	// // // add_point(5, 100);
-	// // // add_point(190, 120);
-	// // // add_point(5, 70);
-
-	// // // add_line(2, 10, 1);
-	// // // add_point(45, 120);
-	// // // add_point(220, 140);
-	// // // add_point(45, 90);
+	// add_line(2, 10, 1);
+	// add_point(45, 120);
+	// add_point(220, 140);
+	// add_point(45, 90);
 
 	// unsigned char f = 0;
 	// while (1)
