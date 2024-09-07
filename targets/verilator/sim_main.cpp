@@ -30,7 +30,7 @@ using namespace std;
 // ------------------
 int initialReset = 48;
 bool run_enable = 1;
-int batchSize = 150000;
+int batchSize = 100;
 bool single_step = 0;
 bool multi_step = 0;
 int multi_step_amount = 1024;
@@ -283,12 +283,12 @@ int main(int argc, char** argv, char** env) {
 		//ImGui::Begin("CHROM Editor");
 		//mem_edit.DrawContents(top->emu__DOT__system__DOT__chrom__DOT__mem, 2048, 0);
 		//ImGui::End();
-		//ImGui::Begin("WKRAM Editor");
-		//mem_edit.DrawContents(&top->emu__DOT__system__DOT__wkram__DOT__mem, 16384, 0);
-		//ImGui::End();
-		//ImGui::Begin("CHRAM Editor");
-		//mem_edit.DrawContents(&top->emu__DOT__system__DOT__chram__DOT__mem, 2048, 0);
-		//ImGui::End();
+		ImGui::Begin("WKRAM Editor");
+		mem_edit.DrawContents(&top->emu__DOT__system__DOT__wkram__DOT__mem, 8192, 0);
+		ImGui::End();
+		ImGui::Begin("CHRAM Editor");
+		mem_edit.DrawContents(&top->emu__DOT__system__DOT__chram__DOT__mem, 2048, 0);
+		ImGui::End();
 		//ImGui::Begin("FGCOLRAM Editor");
 		//mem_edit.DrawContents(&top->emu__DOT__system__DOT__fgcolram__DOT__mem, 2048, 0);
 		//ImGui::End();

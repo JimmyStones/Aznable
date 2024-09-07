@@ -60,7 +60,7 @@ unsigned char __at(0xAA00) charpaletteram[2048];
 unsigned char __at(0xB000) spriteram[512];
 unsigned char __at(0xB400) spritecollisionram[32];
 // - Vulcan (vector engine)
-unsigned char __at(0xC000) vectorram[8192];
+//unsigned char __at(0xC000) vectorram[8192];
 
 
 // Character map

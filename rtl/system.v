@@ -167,13 +167,9 @@ wire spriteram_cs = cpu_addr >= 16'hB000 && cpu_addr < 16'hB080;
 wire spritecollisionram_cs = cpu_addr >= 16'hB400 && cpu_addr < 16'hB404;
 
 // - Vulcan (vector engine)
-wire vectorram_cs = cpu_addr >= 16'hC000 && cpu_addr < 16'hD000;
-
+wire vectorram_cs = cpu_addr >= 16'hC000 && cpu_addr < 16'hE000;
 
 // - CPU working RAM
-// `ifndef WORK_RAM_LOC
-// 	`define WORK_RAM_LOC 16'hC000
-// `endif
 wire wkram_cs = cpu_addr >= `WORK_RAM_LOC;
 
 // Video control output
@@ -199,17 +195,21 @@ always @(posedge clk_24) begin
 	if(system_menu_cs && !cpu_wr_n) menu_trigger <= 1'b0;
 end
 
+reg [31:0] cycle_timer;
 reg [25:0] frame_timer;
 reg [25:0] blank_timer;
 reg vblank_last;
 always @(posedge clk_24) begin
+
+	cycle_timer <= cycle_timer + 1;
+
 	vblank_last <= VGA_VB;
 	frame_timer <= (VGA_VB && !vblank_last) ? 26'b0 : frame_timer + 26'b1;
 	blank_timer <= (VGA_VB && !vblank_last) ? 26'b0 : VGA_VB ? blank_timer + 26'b1 : blank_timer;
 
-	// if(pgrom_cs) $display("%x pgrom o %x", cpu_addr, pgrom_data_out);
-	//if(wkram_cs) $display("%x wkram i %x o %x w %b", cpu_addr, cpu_dout, wkram_data_out, wkram_wr);
-	//if(chram_cs) $display("%x chram i %x o %x w %b", cpu_addr, cpu_dout, chram_data_out, chram_wr);
+	if(pgrom_cs) $display("%d) %x pgrom o %x", cycle_timer, cpu_addr, pgrom_data_out);
+	if(wkram_cs) $display("%d) %x wkram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, wkram_data_out, wkram_wr);
+	if(chram_cs) $display("%d) %x chram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, chram_data_out, chram_wr);
 	//if(fgcolram_cs) $display("%x fgcolram i %x o %x w %b", cpu_addr, cpu_dout, fgcolram_data_out, fgcolram_wr);
 	//if(vectorram_cs) $display("%x vectorram i %x o %x w %b", cpu_addr, cpu_dout, vectorram_data_out, vectorram_wr);
 	//if(in0_cs) $display("%x in0 i %x o %x", cpu_addr, cpu_dout, in0_data_out);
@@ -1259,10 +1259,11 @@ end
 // END VECTOR TEMP
 
 // Work RAM - 0xE000 - 0xFFFF (0x2000 / 8192 bytes)
+wire [15:0] wkram_addr = cpu_addr - `WORK_RAM_LOC;
 spram #(13,8) wkram
 (
 	.clock(clk_24),
-	.address(cpu_addr[12:0]),
+	.address(wkram_addr[12:0]),
 	.wren(wkram_wr),
 	.data(cpu_dout),
 	.q(wkram_data_out)
