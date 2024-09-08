@@ -41,6 +41,7 @@
 	.globl _chram
 	.globl _tilemapram
 	.globl _tilemapctl
+	.globl _vectorram
 	.globl _musicram
 	.globl _sndram
 	.globl _system_menu
@@ -68,22 +69,23 @@
 	.area _DATA
 _input0	=	0x8000
 _video_ctl	=	0x8001
-_timestamp	=	0x8080
-_timer	=	0x80c0
-_joystick	=	0x8100
-_analog_l	=	0x8200
-_analog_r	=	0x8280
-_paddle	=	0x8300
-_spinner	=	0x8380
-_ps2_key	=	0x8400
-_ps2_mouse	=	0x8480
-_starfield1	=	0x8500
-_starfield2	=	0x8510
-_starfield3	=	0x8520
-_system_pause	=	0x8530
-_system_menu	=	0x8531
-_sndram	=	0x8580
-_musicram	=	0x8590
+_timestamp	=	0x8002
+_timer	=	0x8022
+_joystick	=	0x803a
+_analog_l	=	0x80fa
+_analog_r	=	0x815a
+_paddle	=	0x81ba
+_spinner	=	0x81ea
+_ps2_key	=	0x824a
+_ps2_mouse	=	0x8256
+_starfield1	=	0x8286
+_starfield2	=	0x8296
+_starfield3	=	0x82a6
+_system_pause	=	0x82b6
+_system_menu	=	0x82b7
+_sndram	=	0x8300
+_musicram	=	0x8310
+_vectorram	=	0x8320
 _tilemapctl	=	0x8600
 _tilemapram	=	0x8610
 _chram	=	0x9200

@@ -22,10 +22,10 @@
 #include "../shared/sys.h"
 #include "../shared/ui.h"
 #include "vectors_app.h"
-// #include <math.h>
-// #include <float.h>
+#include <math.h>
+#include <float.h>
 
-// #define M_PI 3.14159265358979323846 // pi
+#define M_PI 3.14159265358979323846 // pi
 
 unsigned char v = 0;
 
@@ -45,24 +45,21 @@ void add_point(unsigned char x, unsigned char y)
 	v++;
 }
 
-// void gen_poly(unsigned char cx, unsigned char cy, unsigned char r, unsigned char l)
-// {
-// 	write_string("what?", colour_cga_yellow, 1, 1);
-// 	//write_stringf("what?", colour_cga_darkred, 1, 2, l);
-// 	// add_line(l, 16, 1);
-// 	// float angleStep = 2 * M_PI / l;
+unsigned char gen_poly(unsigned char cx, unsigned char cy, unsigned char r, unsigned char l)
+{
+	float angleStep = 2 * M_PI / l;
 
-// 	//write_stringf_float("gp %d", colour_cga_yellow, 0, 2, angleStep);
-
-// 	// for (unsigned char i = 0; i < l; i++)
-// 	// {
-// 	// 	float xd = r * cosf(i * angleStep);
-// 	// 	float yd = r * sinf(i * angleStep);
-// 	// 	unsigned char x = cx + xd;
-// 	// 	unsigned char y = cy + yd;
-// 	// 	add_point(x, y);
-// 	// }
-// }
+	add_line(l, 16, 1);
+	unsigned char ls = v;
+	for (unsigned char i = 0; i < l; i++)
+	{
+		float xd = r * cosf(i * angleStep);
+		float yd = r * sinf(i * angleStep);
+		add_point(cx + xd, cy + yd);
+	}
+	add_point(vectorram[ls], vectorram[ls + 1]);
+	return ls;
+}
 
 void app_main()
 {
@@ -77,39 +74,25 @@ void app_main()
 	add_point(16, 32);
 	add_point(16, 16);
 
-	// gen_poly(100, 100, 15, 6);
+	unsigned char polys = gen_poly(100, 100, 15, 6);
+
+	gen_poly(80, 140, 18, 7);
 	
-	write_string("what?", colour_cga_yellow, 1, 1);
+	gen_poly(160, 120, 13, 3);
 
-	// add_line(3, 10, 1);
-	// add_point(50, 20);
-	// add_point(60, 120);
-	// add_point(40, 120);
-	// // add_point(50, 20);
-
-	// add_line(2, 10, 1);
-	// add_point(5, 100);
-	// add_point(190, 120);
-	// add_point(5, 70);
-
-	// add_line(2, 10, 1);
-	// add_point(45, 120);
-	// add_point(220, 140);
-	// add_point(45, 90);
-
-	// unsigned char f = 0;
-	// while (1)
-	// {
-	// 	vblank = CHECK_BIT(input0, INPUT_VBLANK);
-	// 	if (VBLANK_RISING)
-	// 	{
-	// 		f++;
-	// 		write_stringf("%d", colour_cga_yellow, 0, 1, f);
-	// 	// 		for (unsigned char i = 2; i < 12; i++)
-	// 	// 		{
-	// 	// 			vectorram[i]++;
-	// 	// 		}
-	// 	}
-	// 	vblank_last = vblank;
-	// }
+	unsigned char f = 0;
+	while (1)
+	{
+		vblank = CHECK_BIT(input0, INPUT_VBLANK);
+		if (VBLANK_RISING)
+		{
+			f++;
+			write_stringf("%d", colour_cga_yellow, 0, 1, f);
+			for (unsigned char i = polys; i < polys + 14; i++)
+			{
+				vectorram[i]++;
+			}
+		}
+		vblank_last = vblank;
+	}
 }

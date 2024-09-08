@@ -44,7 +44,7 @@ module vector #(
 );
 
 
-// Vector RAM - 0xC000 - 0xDFFF (0x2000 / 8192 bytes)
+// Vector RAM
 reg [VECTOR_RAM_WIDTH-1:0] vectorram_sys_addr;
 reg [7:0] vectorram_sys_data_out;
 dpram #(VECTOR_RAM_WIDTH,8) vectorram
@@ -136,17 +136,31 @@ assign	vector_g = vector_gfx_out;
 assign	vector_b = vector_gfx_out;
 assign	vector_a = vector_gfx_out != 0;
 
+// Parameters
 localparam VECTOR_STATE_WIDTH = 5;
+localparam VECTOR_POINTS_MAX = 8;
+localparam VECTOR_POINT_WIDTH = 8;
+
+// State machine constants
+localparam VEC_WAITFORVB = 0;
+localparam VEC_RESET = 1;
+localparam VEC_STARTLOAD = 2;
+localparam VEC_GETATTRIBUTES = 3;
+localparam VEC_GETPOINTX = 4;
+localparam VEC_GETPOINTY = 5;
+localparam VEC_STARTDRAW = 6;
+localparam VEC_DRAW = 7;
+localparam VEC_ENDDRAW = 8;
+localparam VEC_WAIT = {VECTOR_STATE_WIDTH{1'b1}};
+
 reg [VECTOR_STATE_WIDTH-1:0]	vector_state = VEC_RESET;
 reg [VECTOR_STATE_WIDTH-1:0]	vector_state_next;
-localparam VECTOR_POINTS_MAX = 16;
 reg [7:0]	vector_point_loadindex;
 reg [7:0]	vector_point_drawindex;
 reg [7:0]	vector_line_index = 0;
 reg [7:0]	vector_line_length = 0;
 reg [3:0]	vector_line_intensity = 0;
 reg [3:0]	vector_line_colour = 0;
-localparam VECTOR_POINT_WIDTH = 8;
 reg [(VECTOR_POINTS_MAX * VECTOR_POINT_WIDTH)-1:0]	vector_points_x;
 reg [(VECTOR_POINTS_MAX * VECTOR_POINT_WIDTH)-1:0]	vector_points_y;
 
@@ -167,17 +181,6 @@ reg vector_move_y;
 reg signed [VECTOR_POINT_WIDTH:0] vector_err;
 reg signed [VECTOR_POINT_WIDTH:0] vector_derr;
 
-// State machine constants
-localparam VEC_WAITFORVB = 0;
-localparam VEC_RESET = 1;
-localparam VEC_STARTLOAD = 2;
-localparam VEC_GETATTRIBUTES = 3;
-localparam VEC_GETPOINTX = 4;
-localparam VEC_GETPOINTY = 5;
-localparam VEC_STARTDRAW = 6;
-localparam VEC_DRAW = 7;
-localparam VEC_ENDDRAW = 8;
-localparam VEC_WAIT = {VECTOR_STATE_WIDTH{1'b1}};
 
 reg [15:0] vector_timer = 0;
 reg [15:0] vector_timer_last = 0;
@@ -257,9 +260,9 @@ begin
 	VEC_GETPOINTX:
 	begin
 		// Add next X position to points
+		$display("VEC_GETPOINTX: vector_point_loadindex: %d x: %d", vector_point_loadindex, vectorram_sys_data_out);
 		vector_points_x[(vector_point_loadindex*8)+:8] <= vectorram_sys_data_out;
 		vectorram_sys_addr <= vectorram_sys_addr + 1;
-		//$display("VEC_GETPOINTX: vector_point_loadindex: %d x: %d", vector_point_loadindex, vectorram_sys_data_out);
 		vector_state_next <= VEC_GETPOINTY;
 		vector_state <= VEC_WAIT;
 	end
@@ -346,7 +349,7 @@ begin
 
 	endcase
 
-	//$display("h=%d v=%d vec_addr=%d vec_out=%d", hcnt, vcnt, vectorframeram_read_addr, vectorframeram_read_data_out);
+// 	//$display("h=%d v=%d vec_addr=%d vec_out=%d", hcnt, vcnt, vectorframeram_read_addr, vectorframeram_read_data_out);
 
 end
 

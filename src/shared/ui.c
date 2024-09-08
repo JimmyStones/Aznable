@@ -190,25 +190,6 @@ void write_stringf_ulong(const char *format, char color, unsigned char x, unsign
 	}
 }
 
-// Write formatted string to character RAM (float data)
-// void write_stringf_float(const char *format, char color, unsigned char x, unsigned char y, float data)
-// {
-// 	unsigned short p = (y * chram_cols) + x;
-// 	char temp[40];
-// 	sprintf(temp, format, data);
-// 	unsigned char l = strlen(temp);
-// 	for (char c = 0; c < l; c++)
-// 	{
-// 		if (temp[c] == 0)
-// 		{
-// 			return;
-// 		}
-// 		chram[p] = temp[c];
-// 		fgcolram[p] = color;
-// 		p++;
-// 	}
-// }
-
 // Write single char to character RAM and colour RAM
 void write_char(unsigned char c, char color, unsigned char x, unsigned char y)
 {

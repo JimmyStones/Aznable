@@ -80,7 +80,7 @@ void app_main()
 	set_char_palette(colour_menu_sel_text, 255, 255, 255);
 	set_char_palette(colour_menu_sel_back, 0, 0, 0);
 
-	//	loader("INPUTTESTER.AZN");
+	//loader("INPUTTESTER.AZN");
 	start_inputtester_digital();
 
 	while (1)
