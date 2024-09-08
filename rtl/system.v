@@ -225,14 +225,15 @@ always @(posedge clk_24) begin
 	if(system_menu_cs && !cpu_wr_n) menu_trigger <= 1'b0;
 end
 
-//reg vblank_last;
-always @(posedge clk_24) begin
+reg [31:0] cycle_timer;
 
+always @(posedge clk_24) begin
+	cycle_timer <= cycle_timer + 1;
 	//if(pgrom_cs) $display("%d) %x pgrom o %x", cycle_timer, cpu_addr, pgrom_data_out);
 	//if(wkram_cs) $display("%d) %x wkram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, wkram_data_out, wkram_wr);
 	//if(chram_cs) $display("%d) %x chram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, chram_data_out, chram_wr);
 	//if(fgcolram_cs) $display("%x fgcolram i %x o %x w %b", cpu_addr, cpu_dout, fgcolram_data_out, fgcolram_wr);
-	//if(vectorram_cs && vectorram_wr) $display("%x vectorram i %x o %x w %b", cpu_addr, cpu_dout, vectorram_data_out, vectorram_wr);
+	//if(vectorram_cs && vectorram_wr) $display("%d) %x vectorram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, vectorram_data_out, vectorram_wr);
 	//if(in0_cs) $display("%x in0 i %x o %x", cpu_addr, cpu_dout, in0_data_out);
 	// if(video_ctl_cs) $display("%x video_ctl_cs i %x w %b", cpu_addr, cpu_dout, ~cpu_wr_n);
  	//if(joystick_cs) $display("joystick %b  %b", joystick_addr[4:0], joystick_data_out);
@@ -722,10 +723,12 @@ assign AUDIO_L =  audio_signed + music_signed;
 assign AUDIO_R = AUDIO_L;
 
 // Vector
+
 wire [7:0]	vector_r;
 wire [7:0]	vector_g;
 wire [7:0]	vector_b;
 wire		vector_a;
+`ifndef DISABLE_VECTOR
 vector vulcan (
 	.clk(clk_24),
 	.ce_pix(ce_6),
@@ -744,6 +747,7 @@ vector vulcan (
 	.vector_b(vector_b),
 	.vector_a(vector_a)
 );
+`endif 
 
 // MEMORY
 // ------
@@ -752,13 +756,12 @@ localparam PROGRAM_ROM_WIDTH = 15;
 // Program ROM - 0x0000 - 0x7FFF (0x6000 / 32768 bytes)
 dpram #(PROGRAM_ROM_WIDTH,8, "rom.hex") pgrom
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(cpu_addr[PROGRAM_ROM_WIDTH-1:0]),
 	.wren_a(1'b0),
 	.data_a(),
 	.q_a(pgrom_data_out),
 
-	.clock_b(clk_24),
 	.address_b(dn_addr[PROGRAM_ROM_WIDTH-1:0]),
 	.wren_b(pgrom_wr),
 	.data_b(dn_data),
@@ -769,13 +772,12 @@ dpram #(PROGRAM_ROM_WIDTH,8, "rom.hex") pgrom
 // Char ROM - 0x9000 - 0x97FF (0x0800 / 2048 bytes)
 dpram #(11,8, "font.hex") chrom
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(chrom_addr[10:0]),
 	.wren_a(1'b0),
 	.data_a(),
 	.q_a(chrom_data_out),
 
-	.clock_b(clk_24),
 	.address_b(dn_addr[10:0]),
 	.wren_b(chrom_wr),
 	.data_b(dn_data),
@@ -788,13 +790,12 @@ reg [15:0] chram_addr_last;
 wire [15:0] chram_addr_rd = {5'b0, chram_addr[10:0]};
 dpram #(11,8) chram
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(chram_cpu_addr_wr[10:0]),
 	.wren_a(chram_wr),
 	.data_a(cpu_dout),
 	.q_a(chram_data_out),
 
-	.clock_b(clk_24),
 	.address_b(chram_addr_rd[10:0]),
 	.wren_b(1'b0),
 	.data_b(),
@@ -804,13 +805,12 @@ dpram #(11,8) chram
 // Char foreground color RAM - 0x9A00 - 0xA200 (0x0800 / 2048 bytes)
 dpram #(11,8) fgcolram
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(chram_cpu_addr_wr[10:0]),
 	.wren_a(fgcolram_wr),
 	.data_a(cpu_dout),
 	.q_a(),
 
-	.clock_b(clk_24),
 	.address_b(chram_addr_rd[10:0]),
 	.wren_b(1'b0),
 	.data_b(),
@@ -820,13 +820,12 @@ dpram #(11,8) fgcolram
 // Char background color RAM - 0xA200 - 0xAA00 (0x0800 / 2048 bytes)
 dpram #(11,8) bgcolram
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(chram_cpu_addr_wr[10:0]),
 	.wren_a(bgcolram_wr),
 	.data_a(cpu_dout),
 	.q_a(),
 
-	.clock_b(clk_24),
 	.address_b(chram_addr_rd[10:0]),
 	.wren_b(1'b0),
 	.data_b(),
@@ -841,13 +840,12 @@ wire [7:0] charpaletteram_data_out_b;
 assign charpaletteram_data_out = { charpaletteram_data_out_b, charpaletteram_data_out_g, charpaletteram_data_out_r };
 dpram #(8,8) charpaletteram_r
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(charpaletteram_cpu_addr[9:2]),
 	.wren_a(charpaletteram_wr && charpaletteram_cpu_addr[1:0] == 2'b00),
 	.data_a(cpu_dout),
 	.q_a(),
 
-	.clock_b(clk_24),
 	.address_b(charpaletteram_addr_rd),
 	.wren_b(1'b0),
 	.data_b(),
@@ -855,13 +853,12 @@ dpram #(8,8) charpaletteram_r
 );
 dpram #(8,8) charpaletteram_g
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(charpaletteram_cpu_addr[9:2]),
 	.wren_a(charpaletteram_wr && charpaletteram_cpu_addr[1:0] == 2'b01),
 	.data_a(cpu_dout),
 	.q_a(),
 
-	.clock_b(clk_24),
 	.address_b(charpaletteram_addr_rd),
 	.wren_b(1'b0),
 	.data_b(),
@@ -869,13 +866,12 @@ dpram #(8,8) charpaletteram_g
 );
 dpram #(8,8) charpaletteram_b
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(charpaletteram_cpu_addr[9:2]),
 	.wren_a(charpaletteram_wr && charpaletteram_cpu_addr[1:0] == 2'b10),
 	.data_a(cpu_dout),
 	.q_a(),
 
-	.clock_b(clk_24),
 	.address_b(charpaletteram_addr_rd),
 	.wren_b(1'b0),
 	.data_b(),
@@ -890,13 +886,12 @@ dpram #(8,8) charpaletteram_b
 wire [15:0] tilemapram_addr_wr = cpu_addr - 16'h8610;
 dpram #(TILEMAP_RAM_WIDTH,8) tilemapram
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(tilemapram_addr_wr[TILEMAP_RAM_WIDTH-1:0]),
 	.wren_a(tilemapram_wr),
 	.data_a(cpu_dout),
 	.q_a(),
 
-	.clock_b(clk_24),
 	.address_b(tilemapram_addr),
 	.wren_b(tilemapram_ctl_wr),
 	.data_b(tilemapram_ctl_data_in),
@@ -920,13 +915,12 @@ dpram_w1r2 #(TILEMAP_ROM_WIDTH,8, "tilemap.hex") tilemaprom
 wire [15:0] spriteram_addr_wr = cpu_addr - 16'h9200;
 dpram #(SPRITE_RAM_WIDTH,8) spriteram
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(spriteram_addr_wr[SPRITE_RAM_WIDTH-1:0]),
 	.wren_a(spriteram_wr),
 	.data_a(cpu_dout),
 	.q_a(),
 
-	.clock_b(clk_24),
 	.address_b(spriteram_addr),
 	.wren_b(1'b0),
 	.data_b(),
@@ -936,13 +930,12 @@ dpram #(SPRITE_RAM_WIDTH,8) spriteram
 // Sprite Collision RAM - 0xB400 - 0xB47F (0x0080 / 128 bytes)
 dpram #(SPRITE_COLRAM_WIDTH,1) spritecollisionram
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(cpu_addr[SPRITE_COLRAM_WIDTH-1:0]),
 	.wren_a(spritecollisionram_cs && ~cpu_wr_n),
 	.data_a(cpu_dout[0]),
 	.q_a(spritecollisionram_data_out_cpu),
 
-	.clock_b(clk_24),
 	.address_b(spritecollisionram_addr),
 	.wren_b(spritecollisionram_wr),
 	.data_b(spritecollisionram_data_in),
@@ -962,13 +955,12 @@ wire			spritedebugram_wr_b;
 // Sprite Debug Frame Buffer 
 dpram #(17,8) spritedebugram
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(spritedebugram_addr_a),
 	.wren_a(spritedebugram_wr_a),
 	.data_a(spritedebugram_data_in_a),
 	.q_a(spritedebugram_data_out_a),
 
-	.clock_b(clk_24),
 	.address_b(spritedebugram_addr_b),
 	.wren_b(spritedebugram_wr_b),
 	.data_b(spritedebugram_data_in_b),
@@ -979,13 +971,12 @@ dpram #(17,8) spritedebugram
 // Sprite linebuffer RAM - 0xB800 - 0xBFFF (0x0800 / 2048 bytes)
 dpram #(SPRITE_POSITION_WIDTH+1,16) spritelbram
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(spritelbram_wr_addr),
 	.wren_a(spritelbram_wr),
 	.data_a(spritelbram_data_in),
 	.q_a(),
 
-	.clock_b(clk_24),
 	.address_b(spritelbram_rd_addr),
 	.wren_b(spritelbram_rd_wr),
 	.data_b(16'b0),
@@ -995,13 +986,12 @@ dpram #(SPRITE_POSITION_WIDTH+1,16) spritelbram
 // Sprite ROM - 0x11000 - 0x11800 (0x1000 / 4096 bytes)
 dpram #(`SPRITE_ROM_WIDTH,8, "sprite.hex") spriterom
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(sprom_addr),
 	.wren_a(1'b0),
 	.data_a(),
 	.q_a(spriterom_data_out),
 
-	.clock_b(clk_24),
 	.address_b(dn_addr[`SPRITE_ROM_WIDTH-1:0]),
 	.wren_b(spriterom_wr),
 	.data_b(dn_data),
@@ -1036,13 +1026,12 @@ dpram_w1r2 #(8,8, "palette.hex") palrom
 // Music ROM - 128kB
 dpram #(MUSIC_ROM_WIDTH,8, "music.hex") musicrom
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(musicrom_addr),
 	.wren_a(1'b0),
 	.data_a(),
 	.q_a(musicrom_data_out),
 
-	.clock_b(clk_24),
 	.address_b(dn_addr[MUSIC_ROM_WIDTH-1:0]),
 	.wren_b(musicrom_wr),
 	.data_b(dn_data),
@@ -1054,13 +1043,12 @@ dpram #(MUSIC_ROM_WIDTH,8, "music.hex") musicrom
 // Sound ROM - 64kB
 dpram #(SOUND_ROM_WIDTH,8, "sound.hex") soundrom
 (
-	.clock_a(clk_24),
+	.clock(clk_24),
 	.address_a(soundrom_addr),
 	.wren_a(1'b0),
 	.data_a(),
 	.q_a(soundrom_data_out),
 
-	.clock_b(clk_24),
 	.address_b(dn_addr[SOUND_ROM_WIDTH-1:0]),
 	.wren_b(soundrom_wr),
 	.data_b(dn_data),

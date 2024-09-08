@@ -46,16 +46,15 @@ module vector #(
 
 // Vector RAM
 reg [VECTOR_RAM_WIDTH-1:0] vectorram_sys_addr;
-reg [7:0] vectorram_sys_data_out;
+wire [7:0] vectorram_sys_data_out;
 dpram #(VECTOR_RAM_WIDTH,8) vectorram
 (
-	.clock_a(clk),
+	.clock(clk),
 	.address_a(addr[8:0]),
 	.wren_a(write),
 	.data_a(data_in),
 	.q_a(data_out),
 
-	.clock_b(clk),
 	.address_b(vectorram_sys_addr),
 	.wren_b(),
 	.data_b(),
@@ -74,13 +73,12 @@ reg [7:0] vectorframeram_write_data_in;
 wire [7:0] vectorframeram_write_data_out;
 dpram #(16,8) vectorframeram
 (
-	.clock_a(clk),
+	.clock(clk),
 	.address_a(vectorframeram_read_addr),
 	.wren_a(vectorframeram_read_wr),
 	.data_a(vectorframeram_read_data_in),
 	.q_a(vectorframeram_read_data_out),
 
-	.clock_b(clk),
 	.address_b(vectorframeram_write_addr),
 	.wren_b(vectorframeram_write_wr),
 	.data_b(vectorframeram_write_data_in),
@@ -93,10 +91,6 @@ reg [1:0] vector_cycle = 0;
 reg ce_pix_last;
 always @(posedge clk)
 begin
-	// if(vector_timer_last>0) 
-	// begin
-	// 	$display("ce_pix: %d c=%d h=%x v=%d  vfw=%d vdo=%d", ce_pix, vector_cycle, hcnt, vcnt, vectorframeram_read_wr, vectorframeram_read_data_out);
-	// end
 	ce_pix_last <= ce_pix;
 	if(hcnt<256 && vcnt<256)
 	begin
@@ -138,7 +132,6 @@ assign	vector_a = vector_gfx_out != 0;
 
 // Parameters
 localparam VECTOR_STATE_WIDTH = 5;
-localparam VECTOR_POINTS_MAX = 8;
 localparam VECTOR_POINT_WIDTH = 8;
 
 // State machine constants
@@ -146,28 +139,26 @@ localparam VEC_WAITFORVB = 0;
 localparam VEC_RESET = 1;
 localparam VEC_STARTLOAD = 2;
 localparam VEC_GETATTRIBUTES = 3;
-localparam VEC_GETPOINTX = 4;
-localparam VEC_GETPOINTY = 5;
-localparam VEC_STARTDRAW = 6;
-localparam VEC_DRAW = 7;
-localparam VEC_ENDDRAW = 8;
+localparam VEC_GETSTARTX = 4;
+localparam VEC_GETSTARTY = 5;
+localparam VEC_GETPOINTX = 6;
+localparam VEC_GETPOINTY = 7;
+localparam VEC_STARTDRAW = 8;
+localparam VEC_DRAW = 9;
+localparam VEC_ENDDRAW = 10;
 localparam VEC_WAIT = {VECTOR_STATE_WIDTH{1'b1}};
 
 reg [VECTOR_STATE_WIDTH-1:0]	vector_state = VEC_RESET;
 reg [VECTOR_STATE_WIDTH-1:0]	vector_state_next;
-reg [7:0]	vector_point_loadindex;
-reg [7:0]	vector_point_drawindex;
+reg [7:0]	vector_segment_index;
 reg [7:0]	vector_line_index = 0;
 reg [7:0]	vector_line_length = 0;
 reg [3:0]	vector_line_intensity = 0;
 reg [3:0]	vector_line_colour = 0;
-reg [(VECTOR_POINTS_MAX * VECTOR_POINT_WIDTH)-1:0]	vector_points_x;
-reg [(VECTOR_POINTS_MAX * VECTOR_POINT_WIDTH)-1:0]	vector_points_y;
-
-wire [VECTOR_POINT_WIDTH-1:0] vector_point_x0 = vector_points_x[(vector_point_drawindex*8)+:8];
-wire [VECTOR_POINT_WIDTH-1:0] vector_point_x1 = vector_points_x[((vector_point_drawindex+1)*8)+:8];
-wire [VECTOR_POINT_WIDTH-1:0] vector_point_y0 = vector_points_y[(vector_point_drawindex*8)+:8];
-wire [VECTOR_POINT_WIDTH-1:0] vector_point_y1 = vector_points_y[((vector_point_drawindex+1)*8)+:8];
+reg [VECTOR_POINT_WIDTH-1:0] vector_point_x0;
+reg [VECTOR_POINT_WIDTH-1:0] vector_point_x1;
+reg [VECTOR_POINT_WIDTH-1:0] vector_point_y0;
+reg [VECTOR_POINT_WIDTH-1:0] vector_point_y1;
 
 reg signed [VECTOR_POINT_WIDTH:0] vector_draw_dx;
 reg signed [VECTOR_POINT_WIDTH:0] vector_draw_dy;
@@ -183,24 +174,20 @@ reg signed [VECTOR_POINT_WIDTH:0] vector_derr;
 
 
 reg [15:0] vector_timer = 0;
-reg [15:0] vector_timer_last = 0;
+reg vector_active = 0;
 
-reg [31:0] cycle_timer;
 reg [25:0] frame_timer;
 reg [25:0] blank_timer;
-
 
 always @(posedge clk) 
 begin
 	reg vblank_last;
 	vblank_last <= vblank;
 
-	cycle_timer <= cycle_timer + 1;
-
 	frame_timer <= (vblank && !vblank_last) ? 26'b0 : frame_timer + 26'b1;
 	blank_timer <= (vblank && !vblank_last) ? 26'b0 : vblank ? blank_timer + 26'b1 : blank_timer;
 
-	vector_timer <= vector_timer + 1;
+	if(vector_active) vector_timer <= vector_timer + 1;
 
 	case (vector_state)
 	VEC_WAIT:
@@ -209,6 +196,7 @@ begin
 	end
 	VEC_WAITFORVB:
 	begin
+		vector_active <= 0;
 		// Wait for vblank
 		if(vblank && !vblank_last)
 		begin
@@ -221,8 +209,9 @@ begin
 	begin
 		// Reset vector renderer
 		//$display("VEC_RESET");
+		vector_active <= 1;
 		vectorram_sys_addr <= 0;
-		vector_point_loadindex <= 0;
+		vector_segment_index <= 1;
 		vector_line_index <= 0;
 		vector_state_next <= VEC_STARTLOAD;
 		vector_state <= VEC_WAIT;
@@ -232,7 +221,6 @@ begin
 		// Start a new line -> first check for line length
 		if(vectorram_sys_data_out>0)
 		begin
-			vector_point_loadindex <= 0;
 			vector_line_index <= vector_line_index + 1;
 			vector_line_length <= vectorram_sys_data_out;
 			vectorram_sys_addr <= vectorram_sys_addr + 1;
@@ -243,7 +231,6 @@ begin
 		else
 		begin
 			//$display("VEC_STARTLOAD: NO MORE LINES");
-			vector_timer_last <= vector_timer;
 			vector_state <= VEC_WAITFORVB;
 		end
 	end
@@ -253,36 +240,43 @@ begin
 		vector_line_intensity <= vectorram_sys_data_out[3:0];
 		vector_line_colour <= vectorram_sys_data_out[7:4];
 		vectorram_sys_addr <= vectorram_sys_addr + 1;
-		$display("VEC_GETATTRIBUTES: vector_line_intensity: %d vector_line_colour: %d", vectorram_sys_data_out[3:0], vectorram_sys_data_out[7:4]);
+		//$display("VEC_GETATTRIBUTES: i=%d c=%d l=%d", vectorram_sys_data_out[3:0], vectorram_sys_data_out[7:4], vector_line_length);
+		vector_state_next <= VEC_GETSTARTX;
+		vector_state <= VEC_WAIT;
+	end
+	VEC_GETSTARTX:
+	begin
+		// Add next X position to points
+		//$display("VEC_GETSTARTX: %d", vectorram_sys_data_out);
+		vector_point_x1 <= vectorram_sys_data_out;
+		vectorram_sys_addr <= vectorram_sys_addr + 1;
+		vector_state_next <= VEC_GETSTARTY;
+		vector_state <= VEC_WAIT;
+	end
+	VEC_GETSTARTY:
+	begin
+		//$display("VEC_GETSTARTY: %d", vectorram_sys_data_out);
+		vector_point_y1 <= vectorram_sys_data_out;
+		vectorram_sys_addr <= vectorram_sys_addr + 1;
 		vector_state_next <= VEC_GETPOINTX;
 		vector_state <= VEC_WAIT;
 	end
 	VEC_GETPOINTX:
 	begin
-		// Add next X position to points
-		$display("VEC_GETPOINTX: vector_point_loadindex: %d x: %d", vector_point_loadindex, vectorram_sys_data_out);
-		vector_points_x[(vector_point_loadindex*8)+:8] <= vectorram_sys_data_out;
+		//$display("VEC_GETPOINTX: %d", vectorram_sys_data_out);
+		vector_point_x0 <= vector_point_x1;
+		vector_point_x1 <= vectorram_sys_data_out;
 		vectorram_sys_addr <= vectorram_sys_addr + 1;
 		vector_state_next <= VEC_GETPOINTY;
 		vector_state <= VEC_WAIT;
 	end
 	VEC_GETPOINTY:
 	begin
-		// Add next X position to points
-		vector_points_y[(vector_point_loadindex*8)+:8] <= vectorram_sys_data_out;
+		//$display("VEC_GETPOINTY: %d", vectorram_sys_data_out);
+		vector_point_y0 <= vector_point_y1;
+		vector_point_y1 <= vectorram_sys_data_out;
 		vectorram_sys_addr <= vectorram_sys_addr + 1;
-		//$display("VEC_GETPOINTY: vector_point_loadindex: %d y: %d", vector_point_loadindex, vectorram_sys_data_out);
-		if(vector_point_loadindex == vector_line_length)
-		begin
-			vector_point_drawindex <= 0;
-			vector_state <= VEC_STARTDRAW;
-		end
-		else
-		begin
-			vector_point_loadindex <= vector_point_loadindex + 1;
-			vector_state_next <= VEC_GETPOINTX;
-			vector_state <= VEC_WAIT;
-		end
+		vector_state <= VEC_STARTDRAW;
 	end
 	VEC_STARTDRAW:
 	begin
@@ -297,7 +291,7 @@ begin
 		vector_derr = 0;
 
 		// Start drawing line segment
-		$display("VEC_STARTDRAW - l=%d p=%d/%d - %d,%d > %d,%d", vector_line_index, vector_point_drawindex, vector_line_length, vector_point_x0, vector_point_y0, vector_point_x1, vector_point_y1);
+		//$display("VEC_STARTDRAW - l=%d s=%d/%d - %d,%d > %d,%d", vector_line_index, vector_segment_index, vector_line_length, vector_point_x0, vector_point_y0, vector_point_x1, vector_point_y1);
 
 		// Load the next line
 		vector_state <= VEC_DRAW;
@@ -310,15 +304,15 @@ begin
 
 		if(vector_draw_x == vector_point_x1 && vector_draw_y == vector_point_y1)
 		begin
-			if(vector_point_drawindex == vector_line_length - 1)
+			if(vector_segment_index == vector_line_length)
 			begin
 				// This segment is done
 				vector_state <= VEC_ENDDRAW;
 			end
 			else
 			begin
-				vector_point_drawindex <= vector_point_drawindex + 1;
-				vector_state <= VEC_STARTDRAW;
+				vector_segment_index <= vector_segment_index + 1;
+				vector_state <= VEC_GETPOINTX;
 			end
 		end
 		else
@@ -332,14 +326,14 @@ begin
 			vector_err <= vector_err + vector_derr;
 		end
 
-		//$display("VEC_DRAW - l=%d p=%d - right=%d down=%d dx=%d dy=%d x=%d y=%d", vector_line_index, vector_point_drawindex, vector_draw_right, vector_draw_down, vector_draw_dx, vector_draw_dy, vector_draw_x, vector_draw_y);
+		//$display("VEC_DRAW - l=%d s=%d - right=%d down=%d dx=%d dy=%d x=%d y=%d", vector_line_index, vector_segment_index, vector_draw_right, vector_draw_down, vector_draw_dx, vector_draw_dy, vector_draw_x, vector_draw_y);
 		// $display("VEC_DRAW - err=%d derr=%d", vector_err, vector_derr);		
 
 	end
 	VEC_ENDDRAW:
 	begin
 		// Finish drawing line segment
-		//$display("VEC_ENDDRAW - l=%d p=%d - x=%d y=%d", vector_line_index, vector_point_drawindex, vector_draw_x, vector_draw_y);
+		//$display("VEC_ENDDRAW - l=%d s=%d - x=%d y=%d", vector_line_index, vector_segment_index, vector_draw_x, vector_draw_y);
 
 		vectorframeram_write_wr = 1'b0;
 

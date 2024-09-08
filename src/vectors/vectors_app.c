@@ -25,7 +25,8 @@
 #include <math.h>
 #include <float.h>
 
-#define M_PI 3.14159265358979323846 // pi
+// #define M_PI 3.14159265358979323846 // pi
+#define M_2PI 6.28318530718 // pi
 
 unsigned char v = 0;
 
@@ -45,17 +46,44 @@ void add_point(unsigned char x, unsigned char y)
 	v++;
 }
 
-unsigned char gen_poly(unsigned char cx, unsigned char cy, unsigned char r, unsigned char l)
-{
-	float angleStep = 2 * M_PI / l;
+signed char lut_cos[36] = {
+	64, 63, 61, 57, 50, 42, 32, 22, 11, 0,
+	-11, -22, -32, -42, -50, -57, -61, -63, -64, -63,
+	-61, -57, -50, -42, -32, -22, -11, 0, 11, 22,
+	32, 42, 50, 57, 61, 63};
+signed char lut_sin[36] = {
+	0, 11, 22, 32, 42, 50, 57, 61, 63, 64,
+	63, 61, 57, 50, 42, 32, 22, 11, 0, -11,
+	-22, -32, -42, -50, -57, -61, -63, -64, -63, -61,
+	-57, -50, -42, -32, -22, -11};
 
+unsigned char gen_poly_i(unsigned char cx, unsigned char cy, unsigned char r, unsigned char l, unsigned char angle_start)
+{
 	add_line(l, 16, 1);
 	unsigned char ls = v;
+	unsigned short a = angle_start;
+	unsigned short as = 360 / l;
 	for (unsigned char i = 0; i < l; i++)
 	{
-		float xd = r * cosf(i * angleStep);
-		float yd = r * sinf(i * angleStep);
-		add_point(cx + xd, cy + yd);
+		unsigned char ai = a / 10;
+		signed short xd = (r * lut_cos[ai]);
+		signed char xdc = xd / 64;
+		signed short yd = (r * lut_sin[ai]);
+		signed char ydc = yd / 64;
+
+		// write_stringf_short("%3d", colour_cga_white, 0, i, i);
+		// write_stringf_short("%3d", colour_cga_white, 8, i, xd);
+		// write_stringf_short("%3d", colour_cga_white, 16, i, yd);
+
+		vectorram[v] = cx + xdc;
+		v++;
+		vectorram[v] = cy + ydc;
+		v++;
+		a += as;
+		if (a >= 360)
+		{
+			a -= 360;
+		}
 	}
 	add_point(vectorram[ls], vectorram[ls + 1]);
 	return ls;
@@ -67,31 +95,51 @@ void app_main()
 	clear_bgcolor(transparent_char);
 	set_default_char_palette();
 
-	add_line(4, 10, 1);
-	add_point(16, 16);
-	add_point(32, 16);
-	add_point(32, 32);
-	add_point(16, 32);
-	add_point(16, 16);
+	// add_line(4,16,1);
+	// add_point(32,32);
+	// add_point(64,32);
+	// add_point(64,64);
+	// add_point(32,64);
+	// add_point(32,32);
 
-	unsigned char polys = gen_poly(100, 100, 15, 6);
+	// for(unsigned char f=0; f<10; f++){
+	// 	unsigned char x = rand_uchar(16, 164);
+	// 	unsigned char y = rand_uchar(16, 164);
+	// 	unsigned char l = rand_uchar(3, 14);
+	// 	unsigned char r = rand_uchar(8, 36);
+	// 	gen_poly_i(x, y, r, l);
+	// }
 
-	gen_poly(80, 140, 18, 7);
-	
-	gen_poly(160, 120, 13, 3);
-
-	unsigned char f = 0;
+	unsigned char a = 0;
+	unsigned char p = 16;
+	unsigned char pd = 0;
 	while (1)
 	{
 		vblank = CHECK_BIT(input0, INPUT_VBLANK);
 		if (VBLANK_RISING)
 		{
-			f++;
-			write_stringf("%d", colour_cga_yellow, 0, 1, f);
-			for (unsigned char i = polys; i < polys + 14; i++)
+			v = 0;
+			// gen_poly_i(64, 64, 24, 3, a);
+
+			gen_poly_i(128, 128, p, 3, a);
+			a += 5;
+			if (pd)
 			{
-				vectorram[i]++;
+				p++;
+				if (p == 36)
+				{
+					pd = !pd;
+				}
 			}
+			else
+			{
+				p--;
+				if (p == 8)
+				{
+					pd = !pd;
+				}
+			}
+			write_stringf("%d", colour_cga_white, 0, 0, a);
 		}
 		vblank_last = vblank;
 	}
