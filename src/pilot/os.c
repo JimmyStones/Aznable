@@ -386,7 +386,7 @@ void main()
 			}
 
 			unsigned short l = (GET_TIMER);
-			write_stringf_ushort("%6d", 15, 0, 0, l);
+			write_stringf("%6d", 15, 0, 0, l);
 		}
 		vblank_last = vblank;
 	}

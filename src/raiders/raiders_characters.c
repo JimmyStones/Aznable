@@ -621,10 +621,10 @@ void update_characters()
 
 		// if (c > 0)
 		// {
-			// write_stringf_ushort("x=%4d", 0xFF, 0, c, character_x[c]);
-			// write_stringf_ushort("y=%4d", 0xFF, 7, c, character_y[c]);
+			// write_stringf("x=%4d", 0xFF, 0, c, character_x[c]);
+			// write_stringf("y=%4d", 0xFF, 7, c, character_y[c]);
 			// write_stringf("s=%2d", 0xFF, 7, c, character_stun[c]);
-			// write_stringf_ushort("z=%4d", 0xFF, 14, c, character_z[c]);
+			// write_stringf("z=%4d", 0xFF, 14, c, character_z[c]);
 			//  write_stringf("hc: %3d", 0xFF, 0, c, character_hit_combo[c]);
 			//  write_stringf("hct: %3d", 0xFF, 10, c, character_hit_combo_timer[c]);
 			// write_stringf("a=%3d", 0xFF, 21, c, character_anim[c]);

@@ -82,30 +82,6 @@ void set_default_char_palette()
 	set_char_palette(15, 255, 255, 255);
 }
 
-// char log[20][30];
-unsigned char log_index = 0;
-void write_log_uchar(const char *format, unsigned char data)
-{
-	unsigned short p = (log_index * chram_cols);
-	char temp[30];
-	sprintf(temp, format, data);
-	unsigned char l = strlen(temp);
-	for (char c = 0; c < l; c++)
-	{
-		if (temp[c] == 0)
-		{
-			return;
-		}
-		chram[p] = temp[c];
-		p++;
-	}
-	log_index++;
-	if (log_index > 21)
-	{
-		log_index = 0;
-	}
-}
-
 // Write string to character RAM
 void write_string(const char *string, char color, unsigned char x, unsigned char y)
 {
@@ -123,7 +99,7 @@ void write_string(const char *string, char color, unsigned char x, unsigned char
 void write_stringfs(const char *format, char color, unsigned char x, unsigned char y, signed char data)
 {
 	unsigned short p = (y * chram_cols) + x;
-	char temp[30];
+	char temp[40];
 	sprintf(temp, format, data);
 	unsigned char l = strlen(temp);
 	for (char c = 0; c < l; c++)
@@ -213,6 +189,25 @@ void write_stringf_ulong(const char *format, char color, unsigned char x, unsign
 		p++;
 	}
 }
+
+// Write formatted string to character RAM (float data)
+// void write_stringf_float(const char *format, char color, unsigned char x, unsigned char y, float data)
+// {
+// 	unsigned short p = (y * chram_cols) + x;
+// 	char temp[40];
+// 	sprintf(temp, format, data);
+// 	unsigned char l = strlen(temp);
+// 	for (char c = 0; c < l; c++)
+// 	{
+// 		if (temp[c] == 0)
+// 		{
+// 			return;
+// 		}
+// 		chram[p] = temp[c];
+// 		fgcolram[p] = color;
+// 		p++;
+// 	}
+// }
 
 // Write single char to character RAM and colour RAM
 void write_char(unsigned char c, char color, unsigned char x, unsigned char y)

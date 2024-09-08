@@ -23,7 +23,7 @@
 	.globl _update_sprites
 	.globl _set_sprite_position
 	.globl _write_bgcol_row
-	.globl _write_stringf_ushort
+	.globl _write_stringf
 	.globl _write_stringf
 	.globl _write_string
 	.globl _set_default_char_palette
@@ -1768,7 +1768,7 @@ _main::
 	ld	a, b
 	or	a, d
 	ld	b, a
-;os.c:389: write_stringf_ushort("%6d", 15, 0, 0, l);
+;os.c:389: write_stringf("%6d", 15, 0, 0, l);
 	push	bc
 	xor	a, a
 	push	af
@@ -1779,7 +1779,7 @@ _main::
 	push	de
 	ld	hl, #___str_3
 	push	hl
-	call	_write_stringf_ushort
+	call	_write_stringf
 	ld	hl, #7
 	add	hl, sp
 	ld	sp, hl

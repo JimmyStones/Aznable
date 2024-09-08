@@ -80,6 +80,9 @@ void app_main()
 	set_char_palette(colour_menu_sel_text, 255, 255, 255);
 	set_char_palette(colour_menu_sel_back, 0, 0, 0);
 
+	//	loader("INPUTTESTER.AZN");
+	start_inputtester_digital();
+
 	while (1)
 	{
 		hsync = input0 & 0x80;
@@ -159,18 +162,6 @@ void app_main()
 			state = 0;
 			loader("ZORBLAXX.AZN");
 			app_zorblaxx();
-			break;
-
-		default:
-			// Start default state
-			// state = STATE_START_ZORBLAXX;
-			// app_zorblaxx();
-			// state = STATE_START_CREDITS;
-			loader("INPUTTESTER.AZN");
-			start_inputtester_digital();
-			//	start_inputtester_advanced();
-			// start_inputtester_analog();
-			// start_btntest();
 			break;
 		}
 

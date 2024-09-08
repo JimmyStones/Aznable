@@ -744,8 +744,8 @@ void inputtester_advanced()
                 spr_on[MOUSE_POINTER_SPRITE] = 1;
                 set_sprite_position(MOUSE_POINTER_SPRITE, mx, my);
             }
-            write_stringf_ushort("%3d", colour_text_primary, 8, 23, mx - 16);
-            write_stringf_ushort("%3d", colour_text_primary, 12, 23, my - 16);
+            write_stringf("%3d", colour_text_primary, 8, 23, mx - 16);
+            write_stringf("%3d", colour_text_primary, 12, 23, my - 16);
             write_stringf("%3d", colour_text_primary, 20, 23, mse_w_acc);
 
             if (mse_button1_last != mse_button1)
@@ -1003,14 +1003,14 @@ void btntest_results()
 
             if (prompt_time < press_time)
             {
-                write_stringf_ushort("%6dms", colour_text_primary, 2, y, btntest_prompts[prompt]);
+                write_stringf("%6dms", colour_text_primary, 2, y, btntest_prompts[prompt]);
                 y++;
                 prompt++;
                 prompt_last = prompt_time;
             }
             else if (press_time < prompt_time)
             {
-                write_stringf_ushort("%6dms", colour_text_primary, 11, y, btntest_presses[press]);
+                write_stringf("%6dms", colour_text_primary, 11, y, btntest_presses[press]);
 
                 // Is this early or late or just nowhere near?!
                 unsigned short prompt_next = prompt + 1 <= btntest_counter_max ? btntest_prompts[prompt] : 65535;

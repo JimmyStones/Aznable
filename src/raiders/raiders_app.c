@@ -414,13 +414,13 @@ void app_main()
 			timer[0] = 0;
 
 #ifdef DEBUG_TIMING
-			write_stringf_ushort("update sprites      %6d", 0xFF, 0, 23, time_after_update_sprites - time_before_update_sprites);
-			write_stringf_ushort("update tiles        %6d", 0xFF, 0, 24, time_after_update_tiles - time_before_update_tiles);
-			write_stringf_ushort("player input        %6d", 0xFF, 0, 25, time_after_player_input - time_before_player_input);
-			write_stringf_ushort("scrolling           %6d", 0xFF, 0, 26, time_after_scroll - time_before_scroll);
-			write_stringf_ushort("update ai           %6d", 0xFF, 0, 27, time_after_ai - time_before_ai);
-			write_stringf_ushort("update characters   %6d", 0xFF, 0, 28, time_after_characters - time_before_characters);
-			write_stringf_ushort("sort sprites        %6d", 0xFF, 0, 29, time_after_sortsprites - time_before_sortsprites);
+			write_stringf("update sprites      %6d", 0xFF, 0, 23, time_after_update_sprites - time_before_update_sprites);
+			write_stringf("update tiles        %6d", 0xFF, 0, 24, time_after_update_tiles - time_before_update_tiles);
+			write_stringf("player input        %6d", 0xFF, 0, 25, time_after_player_input - time_before_player_input);
+			write_stringf("scrolling           %6d", 0xFF, 0, 26, time_after_scroll - time_before_scroll);
+			write_stringf("update ai           %6d", 0xFF, 0, 27, time_after_ai - time_before_ai);
+			write_stringf("update characters   %6d", 0xFF, 0, 28, time_after_characters - time_before_characters);
+			write_stringf("sort sprites        %6d", 0xFF, 0, 29, time_after_sortsprites - time_before_sortsprites);
 #endif
 		}
 
