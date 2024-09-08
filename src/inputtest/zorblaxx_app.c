@@ -503,7 +503,7 @@ void game_loop()
 					level_playercontrol = 0;
 					set_player_target(player_spawn_x * x_divisor, player_spawn_y * y_divisor, 6, 24);
 
-					write_stringf("-- FIELD %d COMPLETED --", 0xFF, 9, 11, level_number);
+					write_stringf_ushort("-- FIELD %d COMPLETED --", 0xFF, 9, 11, level_number);
 
 					unsigned char par_speed = ((player_speed_max - player_speed_min) / 2);
 					unsigned short par_time = level_progress_max / 60 / par_speed;
@@ -518,8 +518,8 @@ void game_loop()
 					}
 					player_score += bonus;
 
-					write_stringf("Time: %6d", 0xFF, 14, 13, level_time);
-					write_stringf("Par: %6d", 0xFF, 15, 14, par_time);
+					write_stringf_ushort("Time: %6d", 0xFF, 14, 13, level_time);
+					write_stringf_ushort("Par: %6d", 0xFF, 15, 14, par_time);
 					if (bonus > 0)
 					{
 						write_stringf_short("Bonus: %6d", 0b00011000, 13, 16, bonus);

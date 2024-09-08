@@ -118,7 +118,7 @@ void write_stringfs(const char *format, char color, unsigned char x, unsigned ch
 void write_stringf(const char *format, char color, unsigned char x, unsigned char y, unsigned char data)
 {
 	unsigned short p = (y * chram_cols) + x;
-	char temp[30];
+	char temp[40];
 	sprintf(temp, format, data);
 	unsigned char l = strlen(temp);
 	for (char c = 0; c < l; c++)
