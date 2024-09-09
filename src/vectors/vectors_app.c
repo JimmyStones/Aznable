@@ -23,10 +23,6 @@
 #include "../shared/ui.h"
 #include "vectors_app.h"
 #include <math.h>
-#include <float.h>
-
-// #define M_PI 3.14159265358979323846 // pi
-#define M_2PI 6.28318530718 // pi
 
 unsigned char v = 0;
 
@@ -121,7 +117,7 @@ void app_main()
 			v = 0;
 			// gen_poly_i(64, 64, 24, 3, a);
 
-			gen_poly_i(128, 128, p, 3, a);
+			gen_poly_i(50, 50, p, 3, a);
 			a += 5;
 			if (pd)
 			{
@@ -139,7 +135,7 @@ void app_main()
 					pd = !pd;
 				}
 			}
-			write_stringf("%d", colour_cga_white, 0, 0, a);
+			write_stringf("%3d", colour_cga_white, 0, 0, a);
 		}
 		vblank_last = vblank;
 	}

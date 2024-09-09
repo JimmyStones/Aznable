@@ -63,6 +63,9 @@ dpram #(VECTOR_RAM_WIDTH,8) vectorram
 
 // Vector Framebuffer - (0x10000 / 65,536 bytes)
 // Framebuffer is 256x256 bytes = 65,536
+localparam VECTOR_FRAMEBUFFER_RAM_WIDTH = 16;
+localparam VECTOR_FRAMEBUFFER_WIDTH = 256;
+localparam VECTOR_FRAMEBUFFER_HEIGHT = 256;
 wire [15:0] vectorframeram_read_addr = { vcnt[7:0], hcnt[7:0] };
 reg vectorframeram_read_wr;
 reg [7:0] vectorframeram_read_data_in;
@@ -71,15 +74,16 @@ wire [15:0] vectorframeram_write_addr = { vector_draw_y, vector_draw_x };
 reg vectorframeram_write_wr;
 reg [7:0] vectorframeram_write_data_in;
 wire [7:0] vectorframeram_write_data_out;
-dpram #(16,8) vectorframeram
+dpram_dc #(VECTOR_FRAMEBUFFER_RAM_WIDTH,8) vectorframeram
 (
-	.clock(clk),
-	.address_a(vectorframeram_read_addr),
+	.clock_a(clk),
+	.address_a(vectorframeram_read_addr[VECTOR_FRAMEBUFFER_RAM_WIDTH-1:0]),
 	.wren_a(vectorframeram_read_wr),
 	.data_a(vectorframeram_read_data_in),
 	.q_a(vectorframeram_read_data_out),
 
-	.address_b(vectorframeram_write_addr),
+	.clock_b(clk),
+	.address_b(vectorframeram_write_addr[VECTOR_FRAMEBUFFER_RAM_WIDTH-1:0]),
 	.wren_b(vectorframeram_write_wr),
 	.data_b(vectorframeram_write_data_in),
 	.q_b(vectorframeram_write_data_out)
@@ -92,7 +96,7 @@ reg ce_pix_last;
 always @(posedge clk)
 begin
 	ce_pix_last <= ce_pix;
-	if(hcnt<256 && vcnt<256)
+	if(hcnt<VECTOR_FRAMEBUFFER_WIDTH && vcnt<VECTOR_FRAMEBUFFER_HEIGHT)
 	begin
 		case(vector_cycle)
 			0:
