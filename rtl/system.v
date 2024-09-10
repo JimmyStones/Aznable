@@ -157,6 +157,9 @@ wire [15:0]	ps2_mouse_addr = (cpu_addr - MAP_PS2_MOUSE_START);
 wire [7:0]	ps2_mouse_data_out = ps2_mouse[{ps2_mouse_addr[2:0],3'd0} +: 8];
 wire [7:0] tilemapcontrol_data_out;
 wire [7:0] music_data_out;
+wire [15:0] starfield1_addr = cpu_addr - MAP_STARFIELD1_START;
+wire [15:0] starfield2_addr = cpu_addr - MAP_STARFIELD2_START;
+wire [15:0] starfield3_addr = cpu_addr - MAP_STARFIELD3_START;
 
 // CPU address decodes
 // - Program ROM
@@ -241,9 +244,9 @@ always @(posedge clk_24) begin
  	//if(analog_r_cs) $display("analog_r %b  %b", analog_r_bit, analog_r_data_out);
 	//if(paddle_cs) $display("paddle %b", paddle_data_out);
 	//if(ps2_key_cs) $display("ps2_key %b %x", ps2_key_data_out, cpu_addr[3:0]);
-	// if(starfield1_cs) $display("starfield1 %b %b", cpu_addr, cpu_dout);
-	// if(starfield2_cs) $display("starfield2 %b %b", cpu_addr, cpu_dout);
-	// if(starfield3_cs) $display("starfield3 %b %b", cpu_addr, cpu_dout);
+	if(starfield1_cs) $display("starfield1 %d %x", starfield1_addr[2:0], cpu_dout);
+	if(starfield2_cs) $display("starfield2 %d %x", starfield2_addr[2:0], cpu_dout);
+	if(starfield3_cs) $display("starfield3 %d %x", starfield3_addr[2:0], cpu_dout);
 	//if(!cpu_wr_n) $display("cpu_write %x %b",cpu_addr, cpu_dout);
 	//if(spritecollisionram_cs && !cpu_wr_n) $display("spritecollisionram %b %b %b", cpu_wr_n, cpu_addr, cpu_dout);
 	//if(spriteram_cs && !cpu_wr_n) $display("spriteram_cs %x %b", cpu_addr[SPRITE_RAM_WIDTH-1:0], cpu_dout);
@@ -575,7 +578,7 @@ starfield #(
 	.vblank(VGA_VB),
 	.en(ce_6),
 	.pause(pause_system),
-	.addr(cpu_addr[2:0]),
+	.addr(starfield1_addr[2:0]),
 	.data_in(cpu_dout),
 	.write(starfield1_cs && !cpu_wr_n),
 	.sf_on(sf_on1),
@@ -598,7 +601,7 @@ starfield #(
 	.vblank(VGA_VB),
 	.en(ce_6),
 	.pause(pause_system),
-	.addr(cpu_addr[2:0]),
+	.addr(starfield2_addr[2:0]),
 	.data_in(cpu_dout),
 	.write(starfield2_cs && !cpu_wr_n),
 	.sf_on(sf_on2),
@@ -622,7 +625,7 @@ starfield #(
 	.vblank(VGA_VB),
 	.en(ce_6),
 	.pause(pause_system),
-	.addr(cpu_addr[2:0]),
+	.addr(starfield3_addr[2:0]),
 	.data_in(cpu_dout),
 	.write(starfield3_cs && !cpu_wr_n),
 	.sf_on(sf_on3),

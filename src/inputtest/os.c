@@ -81,7 +81,8 @@ void app_main()
 	set_char_palette(colour_menu_sel_back, 0, 0, 0);
 
 	//loader("INPUTTESTER.AZN");
-	start_inputtester_digital();
+//	start_inputtester_digital();
+	app_zorblaxx();
 
 	while (1)
 	{

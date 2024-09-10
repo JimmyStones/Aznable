@@ -56,7 +56,8 @@ always @(posedge clock) begin
 		q_a <= data_a;
 		mem[address_a] <= data_a;
 	end
-
+end
+always @(posedge clock) begin
 	q_b <= mem[address_b];
 	if(wren_b) begin
 		q_b <= data_b;
