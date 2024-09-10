@@ -244,9 +244,9 @@ always @(posedge clk_24) begin
  	//if(analog_r_cs) $display("analog_r %b  %b", analog_r_bit, analog_r_data_out);
 	//if(paddle_cs) $display("paddle %b", paddle_data_out);
 	//if(ps2_key_cs) $display("ps2_key %b %x", ps2_key_data_out, cpu_addr[3:0]);
-	if(starfield1_cs) $display("starfield1 %d %x", starfield1_addr[2:0], cpu_dout);
-	if(starfield2_cs) $display("starfield2 %d %x", starfield2_addr[2:0], cpu_dout);
-	if(starfield3_cs) $display("starfield3 %d %x", starfield3_addr[2:0], cpu_dout);
+	// if(starfield1_cs) $display("starfield1 %d %x", starfield1_addr[2:0], cpu_dout);
+	// if(starfield2_cs) $display("starfield2 %d %x", starfield2_addr[2:0], cpu_dout);
+	// if(starfield3_cs) $display("starfield3 %d %x", starfield3_addr[2:0], cpu_dout);
 	//if(!cpu_wr_n) $display("cpu_write %x %b",cpu_addr, cpu_dout);
 	//if(spritecollisionram_cs && !cpu_wr_n) $display("spritecollisionram %b %b %b", cpu_wr_n, cpu_addr, cpu_dout);
 	//if(spriteram_cs && !cpu_wr_n) $display("spriteram_cs %x %b", cpu_addr[SPRITE_RAM_WIDTH-1:0], cpu_dout);
@@ -562,11 +562,13 @@ end
 `endif
 
 // Moroboshi (starfield)
+localparam STARFIELD_WIDTH = 381;
+localparam STARFIELD_HEIGHT = 262;
 wire 		sf_on1;
 wire [7:0]	sf_star1;
 starfield #(
-	.H(396),
-	.V(256),
+	.H(STARFIELD_WIDTH),
+	.V(STARFIELD_HEIGHT),
 	.LEN(22),
 	.SEED(22'h1FFFFF),
 	.MASK(22'b0000111100001111000011),
@@ -588,8 +590,8 @@ wire 		sf_on2;
 wire [7:0]	sf_star2;
 `ifndef DISABLE_STARS_2
 starfield #(
-	.H(396),
-	.V(256),
+	.H(STARFIELD_WIDTH),
+	.V(STARFIELD_HEIGHT),
 	.LEN(21),
 	.SEED(21'h1FFFF0),
 	.MASK(21'b000011110000111100001),
@@ -612,8 +614,8 @@ wire 		sf_on3;
 wire [7:0]	sf_star3;
 `ifndef DISABLE_STARS_3
 starfield #(
-	.H(396),
-	.V(256),
+	.H(STARFIELD_WIDTH),
+	.V(STARFIELD_HEIGHT),
 	.LEN(21),
 	.SEED(21'h1FFF00),
 	.MASK(21'b000011110000111100001),
@@ -648,9 +650,6 @@ wire [23:0] rgb_vector = { vector_r, vector_g, vector_b };
 wire [23:0] rgb_core = video_sprite_layer_high ? 
 							(spr_a ? rgb_sprite : charmap_a ? rgb_charmap : tilemap_a ? rgb_tilemap : vector_a ? rgb_vector : rgb_starfield) :
 							(charmap_a ? rgb_charmap : spr_a ? rgb_sprite : tilemap_a ? rgb_tilemap : vector_a ? rgb_vector : rgb_starfield);
-// wire [23:0] rgb_core = video_sprite_layer_high ? 
-// 							(spr_a ? rgb_sprite : charmap_a ? rgb_charmap : tilemap_a ? rgb_tilemap : rgb_starfield) :
-// 							(charmap_a ? rgb_charmap : spr_a ? rgb_sprite : tilemap_a ? rgb_tilemap : rgb_starfield);
 wire [23:0] rgb_final;
 
 

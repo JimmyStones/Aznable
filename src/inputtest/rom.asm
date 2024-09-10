@@ -449,17 +449,19 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:85: app_zorblaxx();
+;os.c:83: app_credits();
+	call	_app_credits
+;os.c:86: app_zorblaxx();
 	call	_app_zorblaxx
-;os.c:87: while (1)
+;os.c:88: while (1)
 00123$:
-;os.c:89: hsync = input0 & 0x80;
+;os.c:90: hsync = input0 & 0x80;
 	ld	iy, #_input0
 	ld	a, 0 (iy)
 	rlc	a
 	and	a, #0x01
 	ld	(_hsync+0), a
-;os.c:90: vsync = input0 & 0x40;
+;os.c:91: vsync = input0 & 0x40;
 	ld	a, 0 (iy)
 	and	a, #0x40
 	ld	c, a
@@ -470,7 +472,7 @@ _app_main::
 	ld	a, #0x00
 	rla
 	ld	(_vsync+0), a
-;os.c:91: hblank = CHECK_BIT(input0, INPUT_HBLANK);
+;os.c:92: hblank = CHECK_BIT(input0, INPUT_HBLANK);
 	ld	a, 0 (iy)
 	and	a, #0x20
 	ld	c, a
@@ -478,7 +480,7 @@ _app_main::
 	cp	a, c
 	rla
 	ld	(_hblank+0), a
-;os.c:92: vblank = CHECK_BIT(input0, INPUT_VBLANK);
+;os.c:93: vblank = CHECK_BIT(input0, INPUT_VBLANK);
 	ld	a, 0 (iy)
 	and	a, #0x10
 	ld	c, a
@@ -486,7 +488,7 @@ _app_main::
 	cp	a, c
 	rla
 	ld	(_vblank+0), a
-;os.c:93: switch (state)
+;os.c:94: switch (state)
 	ld	iy, #_state
 	ld	a, 0 (iy)
 	dec	a
@@ -549,159 +551,159 @@ _app_main::
 	sub	a, #0x2b
 	jr	Z,00120$
 	jp	00121$
-;os.c:95: case STATE_START_INPUTTESTER:
+;os.c:96: case STATE_START_INPUTTESTER:
 00101$:
-;os.c:96: start_inputtester_digital();
+;os.c:97: start_inputtester_digital();
 	call	_start_inputtester_digital
-;os.c:97: break;
+;os.c:98: break;
 	jp	00121$
-;os.c:98: case STATE_INPUTTESTER:
+;os.c:99: case STATE_INPUTTESTER:
 00102$:
-;os.c:99: inputtester_digital();
+;os.c:100: inputtester_digital();
 	call	_inputtester_digital
-;os.c:100: break;
+;os.c:101: break;
 	jp	00121$
-;os.c:102: case STATE_START_INPUTTESTERADVANCED:
+;os.c:103: case STATE_START_INPUTTESTERADVANCED:
 00103$:
-;os.c:103: start_inputtester_advanced();
+;os.c:104: start_inputtester_advanced();
 	call	_start_inputtester_advanced
-;os.c:104: break;
+;os.c:105: break;
 	jp	00121$
-;os.c:105: case STATE_INPUTTESTERADVANCED:
+;os.c:106: case STATE_INPUTTESTERADVANCED:
 00104$:
-;os.c:106: inputtester_advanced();
+;os.c:107: inputtester_advanced();
 	call	_inputtester_advanced
-;os.c:107: break;
+;os.c:108: break;
 	jr	00121$
-;os.c:109: case STATE_START_INPUTTESTERANALOG:
+;os.c:110: case STATE_START_INPUTTESTERANALOG:
 00105$:
-;os.c:110: start_inputtester_analog();
+;os.c:111: start_inputtester_analog();
 	call	_start_inputtester_analog
-;os.c:111: break;
+;os.c:112: break;
 	jr	00121$
-;os.c:112: case STATE_INPUTTESTERANALOG:
+;os.c:113: case STATE_INPUTTESTERANALOG:
 00106$:
-;os.c:113: inputtester_analog();
+;os.c:114: inputtester_analog();
 	call	_inputtester_analog
-;os.c:114: break;
+;os.c:115: break;
 	jr	00121$
-;os.c:116: case STATE_START_BTNTEST:
+;os.c:117: case STATE_START_BTNTEST:
 00107$:
-;os.c:117: start_btntest();
+;os.c:118: start_btntest();
 	call	_start_btntest
-;os.c:118: break;
+;os.c:119: break;
 	jr	00121$
-;os.c:119: case STATE_BTNTEST:
+;os.c:120: case STATE_BTNTEST:
 00108$:
-;os.c:120: btntest();
+;os.c:121: btntest();
 	call	_btntest
-;os.c:121: break;
+;os.c:122: break;
 	jr	00121$
-;os.c:123: case STATE_START_GUNSIGHT:
+;os.c:124: case STATE_START_GUNSIGHT:
 00109$:
-;os.c:124: start_gunsight();
+;os.c:125: start_gunsight();
 	call	_start_gunsight
-;os.c:125: break;
+;os.c:126: break;
 	jr	00121$
-;os.c:126: case STATE_GUNSIGHT:
+;os.c:127: case STATE_GUNSIGHT:
 00110$:
-;os.c:127: gunsight();
+;os.c:128: gunsight();
 	call	_gunsight
-;os.c:128: break;
+;os.c:129: break;
 	jr	00121$
-;os.c:130: case STATE_START_MENU:
+;os.c:131: case STATE_START_MENU:
 00111$:
-;os.c:131: start_menu();
+;os.c:132: start_menu();
 	call	_start_menu
-;os.c:132: break;
+;os.c:133: break;
 	jr	00121$
-;os.c:133: case STATE_MENU:
+;os.c:134: case STATE_MENU:
 00112$:
-;os.c:134: menu();
+;os.c:135: menu();
 	call	_menu
-;os.c:135: break;
+;os.c:136: break;
 	jr	00121$
-;os.c:137: case STATE_FADEOUT:
+;os.c:138: case STATE_FADEOUT:
 00113$:
-;os.c:138: fadeout();
+;os.c:139: fadeout();
 	call	_fadeout
-;os.c:139: break;
+;os.c:140: break;
 	jr	00121$
-;os.c:140: case STATE_FADEIN:
+;os.c:141: case STATE_FADEIN:
 00114$:
-;os.c:141: fadein();
+;os.c:142: fadein();
 	call	_fadein
-;os.c:142: break;
+;os.c:143: break;
 	jr	00121$
-;os.c:144: case STATE_START_ATTRACT:
+;os.c:145: case STATE_START_ATTRACT:
 00115$:
-;os.c:145: state = 0;
+;os.c:146: state = 0;
 	ld	hl,#_state + 0
 	ld	(hl), #0x00
-;os.c:146: loader("SNEK.AZN");
+;os.c:147: loader("SNEK.AZN");
 	ld	hl, #___str_0
 	push	hl
 	call	_loader
 	pop	af
-;os.c:147: start_snek_attract();
+;os.c:148: start_snek_attract();
 	call	_start_snek_attract
-;os.c:148: break;
+;os.c:149: break;
 	jr	00121$
-;os.c:149: case STATE_ATTRACT:
+;os.c:150: case STATE_ATTRACT:
 00116$:
-;os.c:150: snek_attract();
+;os.c:151: snek_attract();
 	call	_snek_attract
-;os.c:151: break;
+;os.c:152: break;
 	jr	00121$
-;os.c:152: case STATE_START_CREDITS:
+;os.c:153: case STATE_START_CREDITS:
 00117$:
-;os.c:153: app_credits();
+;os.c:154: app_credits();
 	call	_app_credits
-;os.c:154: break;
+;os.c:155: break;
 	jr	00121$
-;os.c:156: case STATE_START_GAME_SNEK:
+;os.c:157: case STATE_START_GAME_SNEK:
 00118$:
-;os.c:157: start_snek_gameplay();
+;os.c:158: start_snek_gameplay();
 	call	_start_snek_gameplay
-;os.c:158: break;
+;os.c:159: break;
 	jr	00121$
-;os.c:159: case STATE_GAME_SNEK:
+;os.c:160: case STATE_GAME_SNEK:
 00119$:
-;os.c:160: snek_gameplay();
+;os.c:161: snek_gameplay();
 	call	_snek_gameplay
-;os.c:161: break;
+;os.c:162: break;
 	jr	00121$
-;os.c:162: case STATE_START_ZORBLAXX:
+;os.c:163: case STATE_START_ZORBLAXX:
 00120$:
-;os.c:163: state = 0;
+;os.c:164: state = 0;
 	ld	hl,#_state + 0
 	ld	(hl), #0x00
-;os.c:164: loader("ZORBLAXX.AZN");
+;os.c:165: loader("ZORBLAXX.AZN");
 	ld	hl, #___str_1
 	push	hl
 	call	_loader
 	pop	af
-;os.c:165: app_zorblaxx();
+;os.c:166: app_zorblaxx();
 	call	_app_zorblaxx
-;os.c:167: }
+;os.c:168: }
 00121$:
-;os.c:169: hsync_last = hsync;
+;os.c:170: hsync_last = hsync;
 	ld	a,(#_hsync + 0)
 	ld	iy, #_hsync_last
 	ld	0 (iy), a
-;os.c:170: vsync_last = vsync;
+;os.c:171: vsync_last = vsync;
 	ld	a,(#_vsync + 0)
 	ld	iy, #_vsync_last
 	ld	0 (iy), a
-;os.c:171: hblank_last = hblank;
+;os.c:172: hblank_last = hblank;
 	ld	a,(#_hblank + 0)
 	ld	iy, #_hblank_last
 	ld	0 (iy), a
-;os.c:172: vblank_last = vblank;
+;os.c:173: vblank_last = vblank;
 	ld	a,(#_vblank + 0)
 	ld	iy, #_vblank_last
 	ld	0 (iy), a
-;os.c:174: }
+;os.c:175: }
 	jp	00123$
 ___str_0:
 	.ascii "SNEK.AZN"
@@ -709,13 +711,13 @@ ___str_0:
 ___str_1:
 	.ascii "ZORBLAXX.AZN"
 	.db 0x00
-;os.c:177: void main()
+;os.c:178: void main()
 ;	---------------------------------
 ; Function main
 ; ---------------------------------
 _main::
-;os.c:179: app_main();
-;os.c:180: }
+;os.c:180: app_main();
+;os.c:181: }
 	jp	_app_main
 	.area _CODE
 	.area _INITIALIZER
