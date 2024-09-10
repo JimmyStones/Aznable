@@ -510,6 +510,8 @@ reg [2:0] sd_state;
 reg [15:0] vblank_start;
 always @(posedge clk_24) 
 begin
+	reg vblank_last;
+	vblank_last <= VGA_VB;
 	case(sd_state)
 		SD_WAIT:
 		begin
@@ -656,7 +658,7 @@ wire [23:0] rgb_final;
 `ifdef DEBUG_SPRITE_COLLISION
 	// highlight sprite collisions
 	wire [23:0] rgb_sprite_debug = {3{spritedebugram_data_out_a}};
-	assign rgb_final = spritedebugram_data_out_a ? rgb_sprite_debug : rgb_core;
+	assign rgb_final = spritedebugram_data_out_a > 0 ? rgb_sprite_debug : rgb_core;
 `else
 	`ifdef ENABLE_DEBUG_RAMP
 		wire debug_ramp_active = joystick[6];
