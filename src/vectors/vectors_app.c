@@ -66,11 +66,6 @@ unsigned char gen_poly_i(unsigned char cx, unsigned char cy, unsigned char r, un
 		signed char xdc = xd / 64;
 		signed short yd = (r * lut_sin[ai]);
 		signed char ydc = yd / 64;
-
-		// write_stringf_short("%3d", colour_cga_white, 0, i, i);
-		// write_stringf_short("%3d", colour_cga_white, 8, i, xd);
-		// write_stringf_short("%3d", colour_cga_white, 16, i, yd);
-
 		vectorram[v] = cx + xdc;
 		v++;
 		vectorram[v] = cy + ydc;
@@ -85,57 +80,149 @@ unsigned char gen_poly_i(unsigned char cx, unsigned char cy, unsigned char r, un
 	return ls;
 }
 
+#define const_faces_max 8
+#define const_points_max 16
+
+unsigned char face_points[const_faces_max];
+unsigned char point_face[const_points_max];
+signed short point_x[const_points_max];
+signed short point_y[const_points_max];
+signed short point_z[const_points_max];
+
+unsigned char next_point = 0;
+
+void add_point3(unsigned char f, short x, signed short y, signed short z)
+{
+	point_face[next_point] = f;
+	point_x[next_point] = x;
+	point_y[next_point] = y;
+	point_z[next_point] = z;
+	next_point++;
+}
+
 void app_main()
 {
 	chram_size = chram_cols * chram_rows;
 	clear_bgcolor(transparent_char);
+	clear_chars(0);
 	set_default_char_palette();
 
-	// add_line(4,16,1);
-	// add_point(32,32);
-	// add_point(64,32);
-	// add_point(64,64);
-	// add_point(32,64);
-	// add_point(32,32);
+	// Bottom
+	unsigned char f = 0;
+	face_points[f] = 4;
+	add_point3(f, -32, -32, -32);
+	add_point3(f, 32, -32, -32);
+	add_point3(f, 32, -32, 32);
+	add_point3(f, -32, -32, 32);
+	f++;
+	// Top
+	face_points[f] = 4;
+	add_point3(f, -32, 32, -32);
+	add_point3(f, 32, 32, -32);
+	add_point3(f, 32, 32, 32);
+	add_point3(f, -32, 32, 32);
+	f++;
+	// // Left
+	// face_points[f] = 4;
+	// add_point3(f, -32, -32, -32);
+	// add_point3(f, -32, 32, -32);
+	// add_point3(f, -32, 32, 32);
+	// add_point3(f, -32, -32, 32);
+	// f++;
+	// // Right
+	// face_points[f] = 4;
+	// add_point3(f, 32, -32, -32);
+	// add_point3(f, 32, 32, -32);
+	// add_point3(f, 32, 32, 32);
+	// add_point3(f, 32, -32, 32);
+	// f++;
 
-	// for(unsigned char f=0; f<10; f++){
-	// 	unsigned char x = rand_uchar(16, 164);
-	// 	unsigned char y = rand_uchar(16, 164);
-	// 	unsigned char l = rand_uchar(3, 14);
-	// 	unsigned char r = rand_uchar(8, 36);
-	// 	gen_poly_i(x, y, r, l);
-	// }
+	// Render points to 2d (angles in 10 deg increments)
+	unsigned char rot_x = 0;
+	unsigned char rot_y = 0;
+	unsigned char rot_z = 0;
 
-	unsigned char a = 0;
-	unsigned char p = 16;
-	unsigned char pd = 0;
 	while (1)
 	{
 		vblank = CHECK_BIT(input0, INPUT_VBLANK);
 		if (VBLANK_RISING)
 		{
 			v = 0;
-			// gen_poly_i(64, 64, 24, 3, a);
+			unsigned char last_face = 255;
+			unsigned char first_point = 0;
+			signed short div = 36;
 
-			gen_poly_i(50, 50, p, 3, a);
-			a += 5;
-			if (pd)
+			signed short cosx = lut_cos[rot_x];
+			signed short sinx = lut_sin[rot_x];
+			signed short cosy = lut_cos[rot_y];
+			signed short siny = lut_sin[rot_y];
+			signed short r1;
+			signed short r2;
+
+			for (unsigned char p = 0; p < next_point; p++)
 			{
-				p++;
-				if (p == 36)
+				if (last_face != point_face[p])
 				{
-					pd = !pd;
+					if (last_face != 255)
+					{
+						add_point(vectorram[first_point], vectorram[first_point + 1]);
+					}
+					last_face = point_face[p];
+					add_line(face_points[last_face], 16, 1);
+					first_point = v;
 				}
+				signed short x = point_x[p];
+				signed short y = point_y[p];
+				signed short z = point_z[p];
+
+				// r1 = (y * cosx);
+				// r2 = (y * sinx);
+				//  y = (r1 + r2) / div;
+
+				// r1 = (z * cosx);
+				// r2 = (z * sinx);
+				// z = (r1 - r2) / div;
+
+				//;P'(X) = COS(𝛉) * P(X) - SIN(𝛉) * P(Z)
+				r1 = (x * cosy) / div;
+				r2 = (z * siny) / div;
+				x = (r1 - r2);
+
+				//;P'(Z) = SIN(𝛉) * P(X) + COS(𝛉) * P(Z)
+				r1 = (x * siny) / div;
+				r2 = (z * cosy) / div;
+				z = (r1 + r2);
+
+				// write_stringf("%d", colour_cga_white, 0, p, p);
+				// write_stringf_short("%6d", colour_cga_white, 4, p, x);
+				// write_stringf_short("%6d", colour_cga_white, 12, p, y);
+				// write_stringf_short("%6d", colour_cga_white, 20, p, z);
+
+				// x *= 32;
+				x /= 1 + ((z + 256) / 128);
+
+				// y *= 32;
+				y /= 1 + ((z + 256) / 128);
+
+				unsigned char cx = x + 128;
+				unsigned char cy = y + 128;
+
+				add_point(cx, cy);
 			}
-			else
+			add_point(vectorram[first_point], vectorram[first_point + 1]);
+
+			// rot_x++;
+			if (rot_x == 36)
 			{
-				p--;
-				if (p == 8)
-				{
-					pd = !pd;
-				}
+				rot_x = 0;
 			}
-			write_stringf("%3d", colour_cga_white, 0, 0, a);
+			rot_y++;
+			if (rot_y == 36)
+			{
+				rot_y = 0;
+			}
+
+			// write_stringf("rot_x: %3d", colour_cga_white, 0, 0, rot_x);
 		}
 		vblank_last = vblank;
 	}

@@ -109,7 +109,8 @@ begin
 			end
 			2:
 			begin
-				vectorframeram_read_data_in <= vector_gfx_out << 1;
+				//vectorframeram_read_data_in <= vector_gfx_out << 1;
+				vectorframeram_read_data_in <= 0;
 				vectorframeram_read_wr <= 1;
 			end
 			3:
@@ -222,15 +223,15 @@ begin
 	end
 	VEC_STARTLOAD:
 	begin
-		// Start a new line -> first check for line length
 		if(vectorram_sys_data_out>0)
 		begin
+			// Start a new line -> first get line length
 			vector_line_index <= vector_line_index + 1;
 			vector_line_length <= vectorram_sys_data_out;
 			vectorram_sys_addr <= vectorram_sys_addr + 1;
-			//$display("VEC_STARTLOAD: vector_line_length: %d", vectorram_sys_data_out);
 			vector_state_next <= VEC_GETATTRIBUTES;
 			vector_state <= VEC_WAIT;
+			//$display("VEC_STARTLOAD: vector_line_length: %d", vectorram_sys_data_out);
 		end
 		else
 		begin
@@ -329,18 +330,12 @@ begin
 			if(vector_move_y) vector_draw_y <= vector_draw_y + (vector_draw_down ? 1 : -1);
 			vector_err <= vector_err + vector_derr;
 		end
-
 		//$display("VEC_DRAW - l=%d s=%d - right=%d down=%d dx=%d dy=%d x=%d y=%d", vector_line_index, vector_segment_index, vector_draw_right, vector_draw_down, vector_draw_dx, vector_draw_dy, vector_draw_x, vector_draw_y);
-		// $display("VEC_DRAW - err=%d derr=%d", vector_err, vector_derr);		
-
 	end
 	VEC_ENDDRAW:
 	begin
 		// Finish drawing line segment
-		//$display("VEC_ENDDRAW - l=%d s=%d - x=%d y=%d", vector_line_index, vector_segment_index, vector_draw_x, vector_draw_y);
-
 		vectorframeram_write_wr = 1'b0;
-
 		// Load the next line
 		vector_state <= VEC_STARTLOAD;
 	end
