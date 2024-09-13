@@ -228,6 +228,7 @@ begin
 			// Start a new line -> first get line length
 			vector_line_index <= vector_line_index + 1;
 			vector_line_length <= vectorram_sys_data_out;
+			vector_segment_index <=0;
 			vectorram_sys_addr <= vectorram_sys_addr + 1;
 			vector_state_next <= VEC_GETATTRIBUTES;
 			vector_state <= VEC_WAIT;
