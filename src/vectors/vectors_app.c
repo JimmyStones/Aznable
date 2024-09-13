@@ -100,6 +100,99 @@ void add_point3(unsigned char f, short x, signed short y, signed short z)
 	next_point++;
 }
 
+// Render points to 2d (angles in 10 deg increments)
+unsigned char rot_x = 0;
+unsigned char rot_y = 0;
+unsigned char rot_z = 0;
+// signed short translate_x = 0;
+// signed short translate_y = 0;
+// signed short translate_z = 0;
+
+// DPAD tracker
+bool input_left = 0;
+bool input_left_last = 0;
+bool input_right = 0;
+bool input_right_last = 0;
+bool input_up = 0;
+bool input_up_last = 0;
+bool input_down = 0;
+bool input_down_last = 0;
+bool input_a;
+bool input_a_last = 0;
+
+// Track joypad 1 directions and start for menu control
+void basic_input()
+{
+	input_up_last = input_up;
+	input_down_last = input_down;
+	input_left_last = input_left;
+	input_right_last = input_right;
+	input_a_last = input_a;
+	input_up = CHECK_BIT(joystick[0], 3);
+	input_down = CHECK_BIT(joystick[0], 2);
+	input_left = CHECK_BIT(joystick[0], 1);
+	input_right = CHECK_BIT(joystick[0], 0);
+	input_a = CHECK_BIT(joystick[0], 4);
+}
+
+void handle_inputs()
+{
+	if (!input_a)
+	{
+		if (input_up)
+		{
+			rot_x++;
+			if (rot_x == 36)
+			{
+				rot_x = 0;
+			}
+		}
+		if (input_down)
+		{
+			rot_x--;
+			if (rot_x == 255)
+			{
+				rot_x = 35;
+			}
+		}
+		if (input_right)
+		{
+			rot_y++;
+			if (rot_y == 36)
+			{
+				rot_y = 0;
+			}
+		}
+		if (input_left)
+		{
+			rot_y--;
+			if (rot_y == 255)
+			{
+				rot_y = 35;
+			}
+		}
+	}
+	// else
+	// {
+	// 	if (input_up)
+	// 	{
+	// 		translate_y++;
+	// 	}
+	// 	if (input_down)
+	// 	{
+	// 		translate_x++;
+	// 	}
+	// 	if (input_right)
+	// 	{
+	// 		translate_x++;
+	// 	}
+	// 	if (input_left)
+	// 	{
+	// 		translate_x--;
+	// 	}
+	// }
+}
+
 void app_main()
 {
 	chram_size = chram_cols * chram_rows;
@@ -123,34 +216,35 @@ void app_main()
 	add_point3(f, -32, 32, 32);
 	f++;
 	// // Left
-	// face_points[f] = 4;
-	// add_point3(f, -32, -32, -32);
-	// add_point3(f, -32, 32, -32);
-	// add_point3(f, -32, 32, 32);
-	// add_point3(f, -32, -32, 32);
-	// f++;
-	// // Right
-	// face_points[f] = 4;
-	// add_point3(f, 32, -32, -32);
-	// add_point3(f, 32, 32, -32);
-	// add_point3(f, 32, 32, 32);
-	// add_point3(f, 32, -32, 32);
-	// f++;
+	face_points[f] = 4;
+	add_point3(f, -32, -32, -32);
+	add_point3(f, -32, 32, -32);
+	add_point3(f, -32, 32, 32);
+	add_point3(f, -32, -32, 32);
+	f++;
+	// Right
+	face_points[f] = 4;
+	add_point3(f, 32, -32, -32);
+	add_point3(f, 32, 32, -32);
+	add_point3(f, 32, 32, 32);
+	add_point3(f, 32, -32, 32);
+	f++;
 
-	// Render points to 2d (angles in 10 deg increments)
-	unsigned char rot_x = 0;
-	unsigned char rot_y = 0;
-	unsigned char rot_z = 0;
-
+	unsigned char first_render_point = v;
 	while (1)
 	{
+		basic_input();
+
 		vblank = CHECK_BIT(input0, INPUT_VBLANK);
 		if (VBLANK_RISING)
 		{
-			v = 0;
+
+			v = first_render_point;
 			unsigned char last_face = 255;
 			unsigned char first_point = 0;
-			signed short div = 36;
+			signed short div = 64;
+			signed short div2 = 1;
+			signed short mul = 8;
 
 			signed short cosx = lut_cos[rot_x];
 			signed short sinx = lut_sin[rot_x];
@@ -168,61 +262,63 @@ void app_main()
 						add_point(vectorram[first_point], vectorram[first_point + 1]);
 					}
 					last_face = point_face[p];
-					add_line(face_points[last_face], 16, 1);
+					add_line(face_points[last_face] - 1, 16, 1);
 					first_point = v;
 				}
-				signed short x = point_x[p];
-				signed short y = point_y[p];
-				signed short z = point_z[p];
+				signed short x = point_x[p] * mul;
+				signed short y = point_y[p] * mul;
+				signed short z = point_z[p] * mul;
 
-				// r1 = (y * cosx);
-				// r2 = (y * sinx);
-				//  y = (r1 + r2) / div;
+				signed short nx = 0;
+				signed short ny = 0;
+				signed short nz = 0;
 
-				// r1 = (z * cosx);
-				// r2 = (z * sinx);
-				// z = (r1 - r2) / div;
-
+				// Y rotation
 				//;P'(X) = COS(𝛉) * P(X) - SIN(𝛉) * P(Z)
 				r1 = (x * cosy) / div;
 				r2 = (z * siny) / div;
-				x = (r1 - r2);
-
+				nx = (r1 - r2);
 				//;P'(Z) = SIN(𝛉) * P(X) + COS(𝛉) * P(Z)
 				r1 = (x * siny) / div;
 				r2 = (z * cosy) / div;
-				z = (r1 + r2);
+				nz = (r1 + r2);
+				x = nx;
+				z = nz;
 
-				// write_stringf("%d", colour_cga_white, 0, p, p);
-				// write_stringf_short("%6d", colour_cga_white, 4, p, x);
-				// write_stringf_short("%6d", colour_cga_white, 12, p, y);
-				// write_stringf_short("%6d", colour_cga_white, 20, p, z);
+				// X rotation
+				//;P'(Y) = COS(𝛉) * P(Y) + SIN(𝛉) * P(Z)
+				r1 = (y * cosx);
+				r2 = (z * sinx);
+				ny = (r1 + r2) / div;
+				//;P'(Z) = COS(𝛉) * P(Z) - SIN(𝛉) * P(Y)
+				r1 = (z * cosx);
+				r2 = (y * sinx);
+				nz = (r1 - r2) / div;
+				y = ny;
+				z = nz;
 
-				// x *= 32;
-				x /= 1 + ((z + 256) / 128);
+				//write_stringf("%d", colour_cga_white, 0, p, p);
+				// write_stringf_short("%6d", colour_cga_white, 3, p, x);
+				// write_stringf_short("%6d", colour_cga_white, 9, p, y);
+				// write_stringf_short("%6d", colour_cga_white, 15, p, z);
 
-				// y *= 32;
-				y /= 1 + ((z + 256) / 128);
+				// unsigned short d = 1 + ((z + 64) / 64);
+				signed short d = 2 + (((z / mul) + 64) / 8);
+				signed short sx = x / d;
+				signed short sy = y / d;
 
-				unsigned char cx = x + 128;
-				unsigned char cy = y + 128;
+				// sx = sx / div2;
+				// sy = sy / div2;
 
-				add_point(cx, cy);
+				add_point(sx + 128, sy + 128);
 			}
 			add_point(vectorram[first_point], vectorram[first_point + 1]);
 
-			// rot_x++;
-			if (rot_x == 36)
-			{
-				rot_x = 0;
-			}
-			rot_y++;
-			if (rot_y == 36)
-			{
-				rot_y = 0;
-			}
+			handle_inputs();
 
-			// write_stringf("rot_x: %3d", colour_cga_white, 0, 0, rot_x);
+			//write_stringf("%3d", colour_cga_white, 0, 0, rot_x);
+			//  write_stringf("%3d", colour_cga_white, 10, 0, rot_y);
+			//  write_stringf("%3d", colour_cga_white, 15, 0, rot_z);
 		}
 		vblank_last = vblank;
 	}

@@ -236,7 +236,7 @@ always @(posedge clk_24) begin
 	//if(wkram_cs) $display("%d) %x wkram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, wkram_data_out, wkram_wr);
 	//if(chram_cs) $display("%d) %x chram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, chram_data_out, chram_wr);
 	//if(fgcolram_cs) $display("%x fgcolram i %x o %x w %b", cpu_addr, cpu_dout, fgcolram_data_out, fgcolram_wr);
-	//if(vectorram_cs && vectorram_wr) $display("%d) %x vectorram i %x o %x w %b", cycle_timer, cpu_addr, cpu_dout, vectorram_data_out, vectorram_wr);
+	//if(vectorram_cs && vectorram_wr) $display("%d) %x vectorram i %d o %x w %b", cycle_timer, cpu_addr, cpu_dout, vectorram_data_out, vectorram_wr);
 	//if(in0_cs) $display("%x in0 i %x o %x", cpu_addr, cpu_dout, in0_data_out);
 	// if(video_ctl_cs) $display("%x video_ctl_cs i %x w %b", cpu_addr, cpu_dout, ~cpu_wr_n);
  	//if(joystick_cs) $display("joystick %b  %b", joystick_addr[4:0], joystick_data_out);

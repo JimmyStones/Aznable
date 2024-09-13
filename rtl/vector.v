@@ -205,7 +205,7 @@ begin
 		// Wait for vblank
 		if(vblank && !vblank_last)
 		begin
-			$display("VEC_PASS_FINISHED in %d / last frame=%d last blank=%d", vector_timer, frame_timer, blank_timer);
+			//$display("VEC_PASS_FINISHED in %d / last frame=%d last blank=%d", vector_timer, frame_timer, blank_timer);
 			vector_timer <= 0;
 			vector_state <= VEC_RESET;
 		end
