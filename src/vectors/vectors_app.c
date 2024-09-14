@@ -59,7 +59,7 @@ void handle_inputs()
 		if (input_up)
 		{
 			rot_x++;
-			if (rot_x == 36)
+			if (rot_x == rot_max)
 			{
 				rot_x = 0;
 			}
@@ -69,13 +69,13 @@ void handle_inputs()
 			rot_x--;
 			if (rot_x == 255)
 			{
-				rot_x = 35;
+				rot_x = rot_max - 1;
 			}
 		}
 		if (input_right)
 		{
 			rot_y++;
-			if (rot_y == 36)
+			if (rot_y == rot_max)
 			{
 				rot_y = 0;
 			}
@@ -85,8 +85,27 @@ void handle_inputs()
 			rot_y--;
 			if (rot_y == 255)
 			{
-				rot_y = 35;
+				rot_y = rot_max - 1;
 			}
+		}
+	}
+	else
+	{
+		if (input_up)
+		{
+			translate_y += translate_step;
+		}
+		if (input_down)
+		{
+			translate_y -= translate_step;
+		}
+		if (input_right)
+		{
+			translate_x += translate_step;
+		}
+		if (input_left)
+		{
+			translate_x -= translate_step;
 		}
 	}
 }
@@ -98,7 +117,6 @@ void app_main()
 	clear_chars(0);
 	set_default_char_palette();
 
-	timestamp[3] = next_point;
 	// Bottom
 	unsigned char f = 0;
 	face_points[f] = 4;
@@ -129,8 +147,6 @@ void app_main()
 	add_point3(f, 32, -32, 32);
 	f++;
 
-	timestamp[3] = next_point;
-
 	first_render_point = vector_address;
 	while (1)
 	{
@@ -139,9 +155,8 @@ void app_main()
 		vblank = CHECK_BIT(input0, INPUT_VBLANK);
 		if (VBLANK_RISING)
 		{
-			render_points();
-
 			handle_inputs();
+			render_points();
 		}
 		vblank_last = vblank;
 	}

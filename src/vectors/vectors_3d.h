@@ -25,12 +25,15 @@
 extern unsigned char rot_x;
 extern unsigned char rot_y;
 extern unsigned char rot_z;
-// signed short translate_x = 0;
-// signed short translate_y = 0;
-// signed short translate_z = 0;
+extern signed short translate_x;
+extern signed short translate_y;
+extern signed short translate_z;
 
 #define const_faces_max 8
 #define const_points_max 16
+
+#define rot_max 72
+#define translate_step 32
 
 extern unsigned char face_points[];
 extern unsigned char point_face[];

@@ -27,9 +27,10 @@
 unsigned char rot_x = 0;
 unsigned char rot_y = 0;
 unsigned char rot_z = 0;
-// signed short translate_x = 0;
-// signed short translate_y = 0;
-// signed short translate_z = 0;
+signed short translate_x = 0;
+signed short translate_y = 0;
+signed short translate_z = 0;
+
 signed char lut_cos[36] = {
 	64, 63, 61, 57, 50, 42, 32, 22, 11, 0,
 	-11, -22, -32, -42, -50, -57, -61, -63, -64, -63,
@@ -40,6 +41,24 @@ signed char lut_sin[36] = {
 	63, 61, 57, 50, 42, 32, 22, 11, 0, -11,
 	-22, -32, -42, -50, -57, -61, -63, -64, -63, -61,
 	-57, -50, -42, -32, -22, -11};
+
+signed char lut_cos_5[72] = {64, 64, 63, 62, 60, 58, 55, 52, 49, 45,
+							 41, 37, 32, 27, 22, 17, 11, 6, 0, -6,
+							 -11, -17, -22, -27, -32, -37, -41, -45, -49, -52,
+							 -55, -58, -60, -62, -63, -64, -64, -64, -63, -62,
+							 -60, -58, -55, -52, -49, -45, -41, -37, -32, -27,
+							 -22, -17, -11, -6, 0, 6, 11, 17, 22, 27,
+							 32, 37, 41, 45, 49, 52, 55, 58, 60, 62,
+							 63, 64};
+
+signed char lut_sin_5[72] = {0, 6, 11, 17, 22, 27, 32, 37, 41, 45,
+							 49, 52, 55, 58, 60, 62, 63, 64, 64, 64,
+							 63, 62, 60, 58, 55, 52, 49, 45, 41, 37,
+							 32, 27, 22, 17, 11, 6, 0, -6, -11, -17,
+							 -22, -27, -32, -37, -41, -45, -49, -52, -55, -58,
+							 -60, -62, -63, -64, -64, -64, -63, -62, -60, -58,
+							 -55, -52, -49, -45, -41, -37, -32, -27, -22, -17,
+							 -11, -6};
 
 #define const_faces_max 8
 #define const_points_max 16
@@ -72,16 +91,15 @@ void render_points()
 	vector_address = first_render_point;
 	unsigned char first_point = 0;
 	last_face = 255;
-	signed short cosx = lut_cos[rot_x];
-	signed short sinx = lut_sin[rot_x];
-	signed short cosy = lut_cos[rot_y];
-	signed short siny = lut_sin[rot_y];
+	signed short cosx = lut_cos_5[rot_x];
+	signed short sinx = lut_sin_5[rot_x];
+	signed short cosy = lut_cos_5[rot_y];
+	signed short siny = lut_sin_5[rot_y];
 	signed short r1;
 	signed short r2;
 
 	for (unsigned char p = 0; p < next_point; p++)
 	{
-		///write_stringf("p %d", colour_cga_white, 0, p, p);
 		if (last_face != point_face[p])
 		{
 			if (last_face != 255)
@@ -89,7 +107,7 @@ void render_points()
 				add_point(vectorram[first_point], vectorram[first_point + 1]);
 			}
 			last_face = point_face[p];
-			add_line(face_points[last_face] - 1, 16, 1);
+			add_line(face_points[last_face] - 1, 15, 15);
 			first_point = vector_address;
 		}
 
@@ -125,16 +143,24 @@ void render_points()
 		y = ny;
 		z = nz;
 
-		// write_stringf("%d", colour_cga_white, 0, p, p);
-		//  write_stringf_short("%6d", colour_cga_white, 3, p, x);
-		//  write_stringf_short("%6d", colour_cga_white, 9, p, y);
-		//  write_stringf_short("%6d", colour_cga_white, 15, p, z);
+		x += translate_x;
+		y += translate_y;
+		z += translate_z;
 
 		signed short d = 2 + (((z / mul) + 64) / 8);
-		signed short sx = x / d;
-		signed short sy = y / d;
+		signed short sx = (x / d) + 128;
+		signed short sy = (y / d) + 128;
+		
+		if (sx <0)
+		{
+			sx = 0;
+		}
+		if (sy <0)
+		{
+				sy = 0;
+		}
 
-		add_point(sx + 128, sy + 128);
+		add_point(sx, sy);
 	}
 
 	add_point(vectorram[first_point], vectorram[first_point + 1]);

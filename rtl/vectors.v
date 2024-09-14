@@ -109,8 +109,9 @@ begin
 			end
 			2:
 			begin
-				//vectorframeram_read_data_in <= vector_gfx_out << 1;
-				vectorframeram_read_data_in <= 0;
+				//vectorframeram_read_data_in <= (vector_gfx_out > 16) ? (vector_gfx_out << 2) : (vector_gfx_out > 0 ? (vector_gfx_out - 1) : 0);
+				vectorframeram_read_data_in <= vector_gfx_out - (vector_gfx_out/4);
+				//vectorframeram_read_data_in <= 0;
 				vectorframeram_read_wr <= 1;
 			end
 			3:
@@ -306,7 +307,7 @@ begin
 	begin
 		// Start drawing line segment
 		vectorframeram_write_wr = 1'b1;
-		vectorframeram_write_data_in = 8'hFF;
+		vectorframeram_write_data_in = { 4'b0, vector_line_intensity} * 16;
 
 		if(vector_draw_x == vector_point_x1 && vector_draw_y == vector_point_y1)
 		begin
