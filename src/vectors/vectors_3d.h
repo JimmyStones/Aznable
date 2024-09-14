@@ -1,9 +1,9 @@
 /*============================================================================
-	Dual-port RAM module with single-width write port and double-width read port
+	Aznable OS - Vector demo application
 
 	Author: Jim Gregory - https://github.com/JimmyStones/
 	Version: 1.0
-	Date: 2021-10-29
+	Date: 2024-09-06
 
 	This program is free software; you can redistribute it and/or modify it
 	under the terms of the GNU General Public License as published by the Free
@@ -19,41 +19,28 @@
 	with this program. If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================*/
 
-`timescale 1ps / 1ps
+#ifndef VECTORS_3D_H
+#define VECTORS_3D_H
 
-module dpram_w1r2 #(
-	parameter address_width = 10,
-	parameter data_width = 8,
-    parameter init_file= ""
-) (
-	input	wire							clock_a,
-	input	wire							wren_a,
-	input	wire	[address_width-1:0]		address_a,
-	input	wire	[data_width-1:0]		data_a,
+extern unsigned char rot_x;
+extern unsigned char rot_y;
+extern unsigned char rot_z;
+// signed short translate_x = 0;
+// signed short translate_y = 0;
+// signed short translate_z = 0;
 
-	input	wire							clock_b,
-	input	wire	[address_width-1:0]		address_b,
-	output	reg		[(data_width*2)-1:0]	q_b
-);
+#define const_faces_max 8
+#define const_points_max 16
 
-initial begin
-	if (init_file>0)
-	begin
-		$readmemh(init_file, mem);
-	end
-end
+extern unsigned char face_points[];
+extern unsigned char point_face[];
+extern signed short point_x[];
+extern signed short point_y[];
+extern signed short point_z[];
 
-localparam ramLength = (2**address_width);
-reg [data_width-1:0] mem [ramLength-1:0];
+extern unsigned char next_point;
 
-always @(posedge clock_a) begin
-	if(wren_a) begin
-		mem[address_a] <= data_a;
-	end
-end
+extern void add_point3(unsigned char f, short x, signed short y, signed short z);
+extern void render_points();
 
-always @(posedge clock_b) begin
-	q_b <= {mem[address_b], mem[address_b + 1'b1]};
-end
-
-endmodule
+#endif

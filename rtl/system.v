@@ -255,6 +255,7 @@ always @(posedge clk_24) begin
 	//if(system_menu_cs && !cpu_wr_n) $display("system_menu_cs %b %b", cpu_addr, cpu_dout);
 	//if(tilemapcontrol_cs) $display("tilemapcontrol_cs addr=%x dout=%x din=%x wr=%b", cpu_addr, cpu_dout, tilemapcontrol_data_out, cpu_wr_n);
 	//if(tilemapram_cs  && !cpu_wr_n) $display("tilemapram_cs addr=%x addr2=%x wraddr=%x dout=%x", cpu_addr, cpu_addr[TILEMAP_RAM_WIDTH-1:0], tilemapram_addr_wr, cpu_dout);
+	//if(timestamp_cs && !cpu_wr_n) $display("timestamp debug a=%x wr=%x", timestamp_addr[1:0], cpu_dout);
 	//if(timer_cs) $display("timer_cs wr=%b timer=%d addr=%d  frame_time=%d  hcnt=%d  vcnt=%d", ~cpu_wr_n, timer, cpu_addr, frame_timer, hcnt, vcnt);
 	//if(timer_cs && ~cpu_wr_n) $display("timer clear @ timer=%d frame_time=%d  hcnt=%d  vcnt=%d", timer, frame_timer, hcnt, vcnt);
 end
@@ -320,7 +321,7 @@ assign cpu_din = pgrom_cs ? pgrom_data_out :
 				 8'b00000000;
 
 // CPU control signals
-wire [15:0] cpu_addr;
+wire [15:0] cpu_addr/*verilator public_flat*/;
 wire [7:0] cpu_din;
 wire [7:0] cpu_dout;
 wire cpu_wr_n;
@@ -733,7 +734,7 @@ wire [7:0]	vector_g;
 wire [7:0]	vector_b;
 wire		vector_a;
 `ifndef DISABLE_VECTOR
-vector vulcan (
+vectors vulcan (
 	.clk(clk_24),
 	.ce_pix(ce_6),
 	.reset(reset),

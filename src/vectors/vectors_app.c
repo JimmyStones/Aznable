@@ -22,91 +22,8 @@
 #include "../shared/sys.h"
 #include "../shared/ui.h"
 #include "vectors_app.h"
-#include <math.h>
-
-unsigned char v = 0;
-
-void add_line(unsigned char length, unsigned char intensity, unsigned char colour)
-{
-	vectorram[v] = length;
-	v++;
-	vectorram[v] = (intensity) + (colour << 4);
-	v++;
-}
-
-void add_point(unsigned char x, unsigned char y)
-{
-	vectorram[v] = x;
-	v++;
-	vectorram[v] = y;
-	v++;
-}
-
-signed char lut_cos[36] = {
-	64, 63, 61, 57, 50, 42, 32, 22, 11, 0,
-	-11, -22, -32, -42, -50, -57, -61, -63, -64, -63,
-	-61, -57, -50, -42, -32, -22, -11, 0, 11, 22,
-	32, 42, 50, 57, 61, 63};
-signed char lut_sin[36] = {
-	0, 11, 22, 32, 42, 50, 57, 61, 63, 64,
-	63, 61, 57, 50, 42, 32, 22, 11, 0, -11,
-	-22, -32, -42, -50, -57, -61, -63, -64, -63, -61,
-	-57, -50, -42, -32, -22, -11};
-
-unsigned char gen_poly_i(unsigned char cx, unsigned char cy, unsigned char r, unsigned char l, unsigned char angle_start)
-{
-	add_line(l, 16, 1);
-	unsigned char ls = v;
-	unsigned short a = angle_start;
-	unsigned short as = 360 / l;
-	for (unsigned char i = 0; i < l; i++)
-	{
-		unsigned char ai = a / 10;
-		signed short xd = (r * lut_cos[ai]);
-		signed char xdc = xd / 64;
-		signed short yd = (r * lut_sin[ai]);
-		signed char ydc = yd / 64;
-		vectorram[v] = cx + xdc;
-		v++;
-		vectorram[v] = cy + ydc;
-		v++;
-		a += as;
-		if (a >= 360)
-		{
-			a -= 360;
-		}
-	}
-	add_point(vectorram[ls], vectorram[ls + 1]);
-	return ls;
-}
-
-#define const_faces_max 8
-#define const_points_max 16
-
-unsigned char face_points[const_faces_max];
-unsigned char point_face[const_points_max];
-signed short point_x[const_points_max];
-signed short point_y[const_points_max];
-signed short point_z[const_points_max];
-
-unsigned char next_point = 0;
-
-void add_point3(unsigned char f, short x, signed short y, signed short z)
-{
-	point_face[next_point] = f;
-	point_x[next_point] = x;
-	point_y[next_point] = y;
-	point_z[next_point] = z;
-	next_point++;
-}
-
-// Render points to 2d (angles in 10 deg increments)
-unsigned char rot_x = 0;
-unsigned char rot_y = 0;
-unsigned char rot_z = 0;
-// signed short translate_x = 0;
-// signed short translate_y = 0;
-// signed short translate_z = 0;
+#include "vectors_vectors.h"
+#include "vectors_3d.h"
 
 // DPAD tracker
 bool input_left = 0;
@@ -172,25 +89,6 @@ void handle_inputs()
 			}
 		}
 	}
-	// else
-	// {
-	// 	if (input_up)
-	// 	{
-	// 		translate_y++;
-	// 	}
-	// 	if (input_down)
-	// 	{
-	// 		translate_x++;
-	// 	}
-	// 	if (input_right)
-	// 	{
-	// 		translate_x++;
-	// 	}
-	// 	if (input_left)
-	// 	{
-	// 		translate_x--;
-	// 	}
-	// }
 }
 
 void app_main()
@@ -200,6 +98,7 @@ void app_main()
 	clear_chars(0);
 	set_default_char_palette();
 
+	timestamp[3] = next_point;
 	// Bottom
 	unsigned char f = 0;
 	face_points[f] = 4;
@@ -215,7 +114,7 @@ void app_main()
 	add_point3(f, 32, 32, 32);
 	add_point3(f, -32, 32, 32);
 	f++;
-	// // Left
+	// Left
 	face_points[f] = 4;
 	add_point3(f, -32, -32, -32);
 	add_point3(f, -32, 32, -32);
@@ -230,7 +129,9 @@ void app_main()
 	add_point3(f, 32, -32, 32);
 	f++;
 
-	unsigned char first_render_point = v;
+	timestamp[3] = next_point;
+
+	first_render_point = vector_address;
 	while (1)
 	{
 		basic_input();
@@ -238,87 +139,9 @@ void app_main()
 		vblank = CHECK_BIT(input0, INPUT_VBLANK);
 		if (VBLANK_RISING)
 		{
-
-			v = first_render_point;
-			unsigned char last_face = 255;
-			unsigned char first_point = 0;
-			signed short div = 64;
-			signed short div2 = 1;
-			signed short mul = 8;
-
-			signed short cosx = lut_cos[rot_x];
-			signed short sinx = lut_sin[rot_x];
-			signed short cosy = lut_cos[rot_y];
-			signed short siny = lut_sin[rot_y];
-			signed short r1;
-			signed short r2;
-
-			for (unsigned char p = 0; p < next_point; p++)
-			{
-				if (last_face != point_face[p])
-				{
-					if (last_face != 255)
-					{
-						add_point(vectorram[first_point], vectorram[first_point + 1]);
-					}
-					last_face = point_face[p];
-					add_line(face_points[last_face] - 1, 16, 1);
-					first_point = v;
-				}
-				signed short x = point_x[p] * mul;
-				signed short y = point_y[p] * mul;
-				signed short z = point_z[p] * mul;
-
-				signed short nx = 0;
-				signed short ny = 0;
-				signed short nz = 0;
-
-				// Y rotation
-				//;P'(X) = COS(𝛉) * P(X) - SIN(𝛉) * P(Z)
-				r1 = (x * cosy) / div;
-				r2 = (z * siny) / div;
-				nx = (r1 - r2);
-				//;P'(Z) = SIN(𝛉) * P(X) + COS(𝛉) * P(Z)
-				r1 = (x * siny) / div;
-				r2 = (z * cosy) / div;
-				nz = (r1 + r2);
-				x = nx;
-				z = nz;
-
-				// X rotation
-				//;P'(Y) = COS(𝛉) * P(Y) + SIN(𝛉) * P(Z)
-				r1 = (y * cosx);
-				r2 = (z * sinx);
-				ny = (r1 + r2) / div;
-				//;P'(Z) = COS(𝛉) * P(Z) - SIN(𝛉) * P(Y)
-				r1 = (z * cosx);
-				r2 = (y * sinx);
-				nz = (r1 - r2) / div;
-				y = ny;
-				z = nz;
-
-				//write_stringf("%d", colour_cga_white, 0, p, p);
-				// write_stringf_short("%6d", colour_cga_white, 3, p, x);
-				// write_stringf_short("%6d", colour_cga_white, 9, p, y);
-				// write_stringf_short("%6d", colour_cga_white, 15, p, z);
-
-				// unsigned short d = 1 + ((z + 64) / 64);
-				signed short d = 2 + (((z / mul) + 64) / 8);
-				signed short sx = x / d;
-				signed short sy = y / d;
-
-				// sx = sx / div2;
-				// sy = sy / div2;
-
-				add_point(sx + 128, sy + 128);
-			}
-			add_point(vectorram[first_point], vectorram[first_point + 1]);
+			render_points();
 
 			handle_inputs();
-
-			//write_stringf("%3d", colour_cga_white, 0, 0, rot_x);
-			//  write_stringf("%3d", colour_cga_white, 10, 0, rot_y);
-			//  write_stringf("%3d", colour_cga_white, 15, 0, rot_z);
 		}
 		vblank_last = vblank;
 	}

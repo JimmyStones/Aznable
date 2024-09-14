@@ -23,8 +23,7 @@
 
 module dpram_dc #(
 	parameter address_width = 10,
-	parameter data_width = 8,
-    parameter init_file= ""
+	parameter data_width = 8
 ) (
 	input	wire						clock_a,
 	input	wire						wren_a,
@@ -38,6 +37,8 @@ module dpram_dc #(
 	input	wire	[data_width-1:0]	data_b,
 	output	reg		[data_width-1:0]	q_b
 );
+
+/* verilator lint_off MULTIDRIVEN */
 
 localparam ramLength = (2**address_width);
 (* ramstyle="no_rw_check" *) reg [data_width-1:0] mem [ramLength-1:0];
@@ -57,5 +58,7 @@ always @(posedge clock_b) begin
 		mem[address_b] <= data_b;
 	end
 end
+
+/* verilator lint_on MULTIDRIVEN */
 
 endmodule

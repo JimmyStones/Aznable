@@ -20,7 +20,7 @@
 	with this program. If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================*/
 
-module vector #(
+module vectors #(
 	parameter VECTOR_RAM_WIDTH = 9
 )(
 	input				clk,

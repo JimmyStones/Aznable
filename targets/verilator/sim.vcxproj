@@ -41,7 +41,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\;..\..;sim\;sim\imgui;sim\vinc;sim\vinc\vltstd;obj_dir;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..;sim\;sim\imgui;sim\disasm;sim\vinc;sim\vinc\vltstd;obj_dir;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -52,8 +52,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\;..\..;sim\;sim\imgui;sim\vinc;sim\vinc\vltstd;obj_dir;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..;sim\;sim\imgui;sim\disasm;sim\vinc;sim\vinc\vltstd;obj_dir;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -78,6 +79,10 @@
     <ClCompile Include="obj_dir\Vemu__Syms.cpp" />
     <ClCompile Include="obj_dir\Vemu__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu__1__Slow.cpp" />
+    <ClCompile Include="sim\disasm\disasm_z80.cpp" />
+    <ClCompile Include="sim\disasm\disasmintf.cpp" />
+    <ClCompile Include="sim\disasm\z80dasm.cpp" />
+    <ClCompile Include="sim\disasm\strformat.cpp" />
     <ClCompile Include="sim\sim_clock.cpp" />
     <ClCompile Include="sim\sim_bus.cpp" />
     <ClCompile Include="sim\sim_console.cpp" />
@@ -98,6 +103,11 @@
     <ClInclude Include="sim\imgui\implot.h" />
     <ClInclude Include="sim\sim_clock.h" />
     <ClInclude Include="sim\vinc\verilated.h" />
+    <ClInclude Include="sim\disasm\disasm_z80.h" />
+    <ClInclude Include="sim\disasm\z80asm.h" />
+    <ClInclude Include="sim\disasm\disasmintf.h" />
+    <ClInclude Include="sim\disasm\osdcomm.h" />
+    <ClInclude Include="sim\disasm\strformat.h" />
     <ClInclude Include="sim\sim_bus.h" />
     <ClInclude Include="sim\sim_console.h" />
     <ClInclude Include="sim\sim_input.h" />
