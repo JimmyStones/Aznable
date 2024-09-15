@@ -27,87 +27,47 @@
 
 // DPAD tracker
 bool input_left = 0;
-bool input_left_last = 0;
 bool input_right = 0;
-bool input_right_last = 0;
 bool input_up = 0;
-bool input_up_last = 0;
 bool input_down = 0;
-bool input_down_last = 0;
 bool input_a;
-bool input_a_last = 0;
+bool input_b;
+
+unsigned char input_speed = 1;
+signed char rot_timer_x;
+signed char rot_timer_y;
+signed char rot_timer_z;
+signed char rot_speed_x = 0;
+signed char rot_speed_y = 0;
+signed char rot_speed_z = 0;
+signed short rot_pos_x;
+signed short rot_pos_y;
+signed short rot_pos_z;
+signed char rot_timer_max = 4;
 
 // Track joypad 1 directions and start for menu control
 void basic_input()
 {
-	input_up_last = input_up;
-	input_down_last = input_down;
-	input_left_last = input_left;
-	input_right_last = input_right;
-	input_a_last = input_a;
 	input_up = CHECK_BIT(joystick[0], 3);
 	input_down = CHECK_BIT(joystick[0], 2);
 	input_left = CHECK_BIT(joystick[0], 1);
 	input_right = CHECK_BIT(joystick[0], 0);
 	input_a = CHECK_BIT(joystick[0], 4);
+	input_b = CHECK_BIT(joystick[0], 5);
 }
 
 void handle_inputs()
 {
-	if (!input_a)
-	{
-		if (input_up)
-		{
-			rot_x++;
-			if (rot_x == rot_max)
-			{
-				rot_x = 0;
-			}
-		}
-		if (input_down)
-		{
-			rot_x--;
-			if (rot_x == 255)
-			{
-				rot_x = rot_max - 1;
-			}
-		}
-		if (input_right)
-		{
-			rot_y++;
-			if (rot_y == rot_max)
-			{
-				rot_y = 0;
-			}
-		}
-		if (input_left)
-		{
-			rot_y--;
-			if (rot_y == 255)
-			{
-				rot_y = rot_max - 1;
-			}
-		}
-	}
-	else
-	{
-		if (input_up)
-		{
-			translate_y += translate_step;
-		}
-		if (input_down)
-		{
-			translate_y -= translate_step;
-		}
-		if (input_right)
-		{
-			translate_x += translate_step;
-		}
-		if (input_left)
-		{
-			translate_x -= translate_step;
-		}
-	}
+	rot_speed_x += (input_up ? input_speed : input_down ? -input_speed
+														: 0);
+	rot_speed_y += (input_right ? input_speed : input_left ? -input_speed
+														   : 0);
+	rot_speed_z += (input_a ? input_speed : input_b ? -input_speed
+													: 0);
+
+	// rot_speed_x -= abs(rot_speed_x);
+	// rot_speed_y -= abs(rot_speed_y);
+	// rot_speed_z -= abs(rot_speed_z);
 }
 
 void app_main()
@@ -156,6 +116,54 @@ void app_main()
 		if (VBLANK_RISING)
 		{
 			handle_inputs();
+
+			rot_timer_x -= abs(rot_speed_x);
+			if (rot_timer_x < 0)
+			{
+				rot_timer_x = rot_timer_max;
+				rot_pos_x += rot_speed_x;
+				if (rot_pos_x < 0)
+				{
+					rot_pos_x = 359;
+				}
+				else if (rot_pos_x > 359)
+				{
+					rot_pos_x = 0;
+				}
+			}
+			rot_timer_y -= abs(rot_speed_y);
+			if (rot_timer_y < 0)
+			{
+				rot_timer_y = rot_timer_max;
+				rot_pos_y += rot_speed_y;
+				if (rot_pos_y < 0)
+				{
+					rot_pos_y = 359;
+				}
+				else if (rot_pos_y > 359)
+				{
+					rot_pos_y = 0;
+				}
+			}
+			rot_timer_z -= abs(rot_speed_z);
+			if (rot_timer_z < 0)
+			{
+				rot_timer_z = rot_timer_max;
+				rot_pos_z += rot_speed_z;
+				if (rot_pos_z < 0)
+				{
+					rot_pos_z = 359;
+				}
+				else if (rot_pos_z > 359)
+				{
+					rot_pos_z = 0;
+				}
+			}
+
+			rot_x = rot_pos_x / 5;
+			rot_y = rot_pos_y / 5;
+			rot_z = rot_pos_z / 5;
+
 			render_points();
 		}
 		vblank_last = vblank;

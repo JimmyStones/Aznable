@@ -95,6 +95,8 @@ void render_points()
 	signed short sinx = lut_sin_5[rot_x];
 	signed short cosy = lut_cos_5[rot_y];
 	signed short siny = lut_sin_5[rot_y];
+	signed short cosz = lut_cos_5[rot_z];
+	signed short sinz = lut_sin_5[rot_z];
 	signed short r1;
 	signed short r2;
 
@@ -143,6 +145,18 @@ void render_points()
 		y = ny;
 		z = nz;
 
+		// Z rotation
+		// ;P'(X) = COS(𝛉) * P(X) + SIN(𝛉) * P(Y)
+		r1 = (x * cosz);
+		r2 = (y * sinz);
+		nx = (r1 + r2) / div;
+		// ;P'(Y) = COS(𝛉) * P(Y) - SIN(𝛉) * P(X)
+		r1 = (y * cosz);
+		r2 = (x * sinz);
+		ny = (r1 - r2) / div;
+		x = nx;
+		y = ny;
+		
 		x += translate_x;
 		y += translate_y;
 		z += translate_z;
