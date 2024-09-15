@@ -24,23 +24,23 @@
 #include "vectors_3d.h"
 #include "vectors_vectors.h"
 
-unsigned char rot_x = 0;
-unsigned char rot_y = 0;
-unsigned char rot_z = 0;
+// unsigned char rot_x = 0;
+// unsigned char rot_y = 0;
+// unsigned char rot_z = 0;
 signed short translate_x = 0;
 signed short translate_y = 0;
 signed short translate_z = 0;
 
-signed char lut_cos[36] = {
-	64, 63, 61, 57, 50, 42, 32, 22, 11, 0,
-	-11, -22, -32, -42, -50, -57, -61, -63, -64, -63,
-	-61, -57, -50, -42, -32, -22, -11, 0, 11, 22,
-	32, 42, 50, 57, 61, 63};
-signed char lut_sin[36] = {
-	0, 11, 22, 32, 42, 50, 57, 61, 63, 64,
-	63, 61, 57, 50, 42, 32, 22, 11, 0, -11,
-	-22, -32, -42, -50, -57, -61, -63, -64, -63, -61,
-	-57, -50, -42, -32, -22, -11};
+// signed char lut_cos[36] = {
+// 	64, 63, 61, 57, 50, 42, 32, 22, 11, 0,
+// 	-11, -22, -32, -42, -50, -57, -61, -63, -64, -63,
+// 	-61, -57, -50, -42, -32, -22, -11, 0, 11, 22,
+// 	32, 42, 50, 57, 61, 63};
+// signed char lut_sin[36] = {
+// 	0, 11, 22, 32, 42, 50, 57, 61, 63, 64,
+// 	63, 61, 57, 50, 42, 32, 22, 11, 0, -11,
+// 	-22, -32, -42, -50, -57, -61, -63, -64, -63, -61,
+// 	-57, -50, -42, -32, -22, -11};
 
 signed char lut_cos_5[72] = {64, 64, 63, 62, 60, 58, 55, 52, 49, 45,
 							 41, 37, 32, 27, 22, 17, 11, 6, 0, -6,
@@ -60,16 +60,24 @@ signed char lut_sin_5[72] = {0, 6, 11, 17, 22, 27, 32, 37, 41, 45,
 							 -55, -52, -49, -45, -41, -37, -32, -27, -22, -17,
 							 -11, -6};
 
-#define const_faces_max 8
-#define const_points_max 16
+unsigned char object_firstpoint[const_objects_max];
+unsigned char object_firstface[const_objects_max];
+unsigned char object_points[const_objects_max];
+signed short object_pos_x[const_objects_max];
+signed short object_pos_y[const_objects_max];
+signed short object_pos_z[const_objects_max];
+unsigned short object_rot_x[const_objects_max];
+unsigned short object_rot_y[const_objects_max];
+unsigned short object_rot_z[const_objects_max];
+unsigned char next_object = 0;
+unsigned char next_face = 0;
+unsigned char next_point = 0;
 
 unsigned char face_points[const_faces_max];
 unsigned char point_face[const_points_max];
 signed short point_x[const_points_max];
 signed short point_y[const_points_max];
 signed short point_z[const_points_max];
-
-unsigned char next_point = 0;
 
 void add_point3(unsigned char f, short x, signed short y, signed short z)
 {
@@ -81,101 +89,103 @@ void add_point3(unsigned char f, short x, signed short y, signed short z)
 }
 
 signed short div = 64;
-signed short div2 = 1;
 signed short mul = 8;
-unsigned char first_render_point;
 unsigned char last_face;
+unsigned char zoom_div = 8;
+unsigned char zoom_bias = 64;
 
-void render_points()
+void render_objects()
 {
-	vector_address = first_render_point;
-	unsigned char first_point = 0;
-	last_face = 255;
-	signed short cosx = lut_cos_5[rot_x];
-	signed short sinx = lut_sin_5[rot_x];
-	signed short cosy = lut_cos_5[rot_y];
-	signed short siny = lut_sin_5[rot_y];
-	signed short cosz = lut_cos_5[rot_z];
-	signed short sinz = lut_sin_5[rot_z];
+	vector_address = 0;
 	signed short r1;
 	signed short r2;
-
-	for (unsigned char p = 0; p < next_point; p++)
+	for (unsigned char o = 0; o <= next_object; o++)
 	{
-		if (last_face != point_face[p])
+		unsigned char first_point = 0;
+		last_face = 255;
+		unsigned char rot_x = object_rot_x[o];
+		unsigned char rot_y = object_rot_y[o];
+		unsigned char rot_z = object_rot_z[o];
+		signed short cosx = lut_cos_5[rot_x];
+		signed short sinx = lut_sin_5[rot_x];
+		signed short cosy = lut_cos_5[rot_y];
+		signed short siny = lut_sin_5[rot_y];
+		signed short cosz = lut_cos_5[rot_z];
+		signed short sinz = lut_sin_5[rot_z];
+		signed short tx = translate_x + (object_pos_x[o] * mul);
+		signed short ty = translate_y + (object_pos_y[o] * mul);
+		signed short tz = translate_z + (object_pos_z[o] * mul);
+		unsigned char fp = object_firstpoint[o];
+		unsigned char lp = fp + object_points[o];
+		for (unsigned char p = fp; p < lp; p++)
 		{
-			if (last_face != 255)
+			if (last_face != point_face[p])
 			{
-				add_point(vectorram[first_point], vectorram[first_point + 1]);
+				if (last_face != 255)
+				{
+					add_point(vectorram[first_point], vectorram[first_point + 1]);
+				}
+				last_face = point_face[p];
+				add_line(face_points[last_face] - 1, 15, 15);
+				first_point = vector_address;
 			}
-			last_face = point_face[p];
-			add_line(face_points[last_face] - 1, 15, 15);
-			first_point = vector_address;
-		}
+			signed short x = point_x[p] * mul;
+			signed short y = point_y[p] * mul;
+			signed short z = point_z[p] * mul;
+			signed short nx = 0;
+			signed short ny = 0;
+			signed short nz = 0;
 
-		signed short x = point_x[p] * mul;
-		signed short y = point_y[p] * mul;
-		signed short z = point_z[p] * mul;
+			// Y rotation
+			//;P'(X) = COS(𝛉) * P(X) - SIN(𝛉) * P(Z)
+			r1 = (x * cosy) / div;
+			r2 = (z * siny) / div;
+			nx = (r1 - r2);
+			//;P'(Z) = SIN(𝛉) * P(X) + COS(𝛉) * P(Z)
+			r1 = (x * siny) / div;
+			r2 = (z * cosy) / div;
+			nz = (r1 + r2);
+			x = nx;
+			z = nz;
+			// X rotation
+			//;P'(Y) = COS(𝛉) * P(Y) + SIN(𝛉) * P(Z)
+			r1 = (y * cosx);
+			r2 = (z * sinx);
+			ny = (r1 + r2) / div;
+			//;P'(Z) = COS(𝛉) * P(Z) - SIN(𝛉) * P(Y)
+			r1 = (z * cosx);
+			r2 = (y * sinx);
+			nz = (r1 - r2) / div;
+			y = ny;
+			z = nz;
+			// Z rotation
+			// ;P'(X) = COS(𝛉) * P(X) + SIN(𝛉) * P(Y)
+			r1 = (x * cosz);
+			r2 = (y * sinz);
+			nx = (r1 + r2) / div;
+			// ;P'(Y) = COS(𝛉) * P(Y) - SIN(𝛉) * P(X)
+			r1 = (y * cosz);
+			r2 = (x * sinz);
+			ny = (r1 - r2) / div;
+			x = nx;
+			y = ny;
+			x += tx;
+			y += ty;
+			z += tz;
+			signed short d = 2 + (((z / mul) + zoom_bias) / zoom_div);
 
-		signed short nx = 0;
-		signed short ny = 0;
-		signed short nz = 0;
-
-		// Y rotation
-		//;P'(X) = COS(𝛉) * P(X) - SIN(𝛉) * P(Z)
-		r1 = (x * cosy) / div;
-		r2 = (z * siny) / div;
-		nx = (r1 - r2);
-		//;P'(Z) = SIN(𝛉) * P(X) + COS(𝛉) * P(Z)
-		r1 = (x * siny) / div;
-		r2 = (z * cosy) / div;
-		nz = (r1 + r2);
-		x = nx;
-		z = nz;
-
-		// X rotation
-		//;P'(Y) = COS(𝛉) * P(Y) + SIN(𝛉) * P(Z)
-		r1 = (y * cosx);
-		r2 = (z * sinx);
-		ny = (r1 + r2) / div;
-		//;P'(Z) = COS(𝛉) * P(Z) - SIN(𝛉) * P(Y)
-		r1 = (z * cosx);
-		r2 = (y * sinx);
-		nz = (r1 - r2) / div;
-		y = ny;
-		z = nz;
-
-		// Z rotation
-		// ;P'(X) = COS(𝛉) * P(X) + SIN(𝛉) * P(Y)
-		r1 = (x * cosz);
-		r2 = (y * sinz);
-		nx = (r1 + r2) / div;
-		// ;P'(Y) = COS(𝛉) * P(Y) - SIN(𝛉) * P(X)
-		r1 = (y * cosz);
-		r2 = (x * sinz);
-		ny = (r1 - r2) / div;
-		x = nx;
-		y = ny;
-		
-		x += translate_x;
-		y += translate_y;
-		z += translate_z;
-
-		signed short d = 2 + (((z / mul) + 64) / 8);
-		signed short sx = (x / d) + 128;
-		signed short sy = (y / d) + 128;
-		
-		if (sx <0)
-		{
-			sx = 0;
-		}
-		if (sy <0)
-		{
+			signed short sx = (x / d) + 128;
+			signed short sy = (y / d) + 128;
+			if (sx < 0)
+			{
+				sx = 0;
+			}
+			if (sy < 0)
+			{
 				sy = 0;
+			}
+			add_point(sx, sy);
 		}
-
-		add_point(sx, sy);
+		add_point(vectorram[first_point], vectorram[first_point + 1]);
 	}
-
-	add_point(vectorram[first_point], vectorram[first_point + 1]);
 }

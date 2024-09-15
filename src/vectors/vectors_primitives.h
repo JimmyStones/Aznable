@@ -19,11 +19,9 @@
 	with this program. If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================*/
 
-#ifndef VECTORS_VECTORS_H
-#define VECTORS_VECTORS_H
+#ifndef VECTORS_PRIMITIVES_H
+#define VECTORS_PRIMITIVES_H
 
-extern unsigned char vector_address;
-extern void add_line(unsigned char length, unsigned char intensity, unsigned char colour);
-extern void add_point(unsigned char x, unsigned char y);
+extern void generate_box(unsigned char size_x, unsigned char size_y, unsigned char size_z);
 
 #endif

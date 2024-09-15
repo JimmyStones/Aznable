@@ -22,18 +22,29 @@
 #ifndef VECTORS_3D_H
 #define VECTORS_3D_H
 
-extern unsigned char rot_x;
-extern unsigned char rot_y;
-extern unsigned char rot_z;
+extern signed char lut_cos_5[];
+extern signed char lut_sin_5[];
+
 extern signed short translate_x;
 extern signed short translate_y;
 extern signed short translate_z;
 
-#define const_faces_max 8
-#define const_points_max 16
+#define const_faces_max 24
+#define const_points_max 64
+#define const_objects_max 3
 
 #define rot_max 72
-#define translate_step 32
+
+extern unsigned char object_firstpoint[];
+extern unsigned char object_firstface[];
+extern unsigned char object_points[];
+extern signed short object_pos_x[];
+extern signed short object_pos_y[];
+extern signed short object_pos_z[];
+extern unsigned short object_rot_x[];
+extern unsigned short object_rot_y[];
+extern unsigned short object_rot_z[];
+extern unsigned char next_object;
 
 extern unsigned char face_points[];
 extern unsigned char point_face[];
@@ -42,8 +53,9 @@ extern signed short point_y[];
 extern signed short point_z[];
 
 extern unsigned char next_point;
+extern unsigned char next_face;
 
 extern void add_point3(unsigned char f, short x, signed short y, signed short z);
-extern void render_points();
+extern void render_objects();
 
 #endif

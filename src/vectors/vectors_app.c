@@ -24,6 +24,7 @@
 #include "vectors_app.h"
 #include "vectors_vectors.h"
 #include "vectors_3d.h"
+#include "vectors_primitives.h"
 
 // DPAD tracker
 bool input_left = 0;
@@ -37,7 +38,7 @@ unsigned char input_speed = 1;
 signed char rot_timer_x;
 signed char rot_timer_y;
 signed char rot_timer_z;
-signed char rot_speed_x = 0;
+signed char rot_speed_x = 4;
 signed char rot_speed_y = 0;
 signed char rot_speed_z = 0;
 signed short rot_pos_x;
@@ -64,10 +65,6 @@ void handle_inputs()
 														   : 0);
 	rot_speed_z += (input_a ? input_speed : input_b ? -input_speed
 													: 0);
-
-	// rot_speed_x -= abs(rot_speed_x);
-	// rot_speed_y -= abs(rot_speed_y);
-	// rot_speed_z -= abs(rot_speed_z);
 }
 
 void app_main()
@@ -77,37 +74,43 @@ void app_main()
 	clear_chars(0);
 	set_default_char_palette();
 
-	// Bottom
-	unsigned char f = 0;
-	face_points[f] = 4;
-	add_point3(f, -32, -32, -32);
-	add_point3(f, 32, -32, -32);
-	add_point3(f, 32, -32, 32);
-	add_point3(f, -32, -32, 32);
-	f++;
-	// Top
-	face_points[f] = 4;
-	add_point3(f, -32, 32, -32);
-	add_point3(f, 32, 32, -32);
-	add_point3(f, 32, 32, 32);
-	add_point3(f, -32, 32, 32);
-	f++;
-	// Left
-	face_points[f] = 4;
-	add_point3(f, -32, -32, -32);
-	add_point3(f, -32, 32, -32);
-	add_point3(f, -32, 32, 32);
-	add_point3(f, -32, -32, 32);
-	f++;
-	// Right
-	face_points[f] = 4;
-	add_point3(f, 32, -32, -32);
-	add_point3(f, 32, 32, -32);
-	add_point3(f, 32, 32, 32);
-	add_point3(f, 32, -32, 32);
-	f++;
+	object_firstpoint[next_object] = next_point;
+	object_firstface[next_object] = next_face;
+	object_pos_x[next_object] = 64;
+	object_pos_y[next_object] = 0;
+	object_pos_z[next_object] = 0;
+	object_rot_x[next_object] = 0;
+	object_rot_y[next_object] = 0;
+	object_rot_z[next_object] = 0;
+	generate_box(16, 32, 24);
+	object_points[next_object] = next_point - object_firstpoint[next_object];
+	next_object++;
 
-	first_render_point = vector_address;
+	object_firstpoint[next_object] = next_point;
+	object_firstface[next_object] = next_face;
+	object_pos_x[next_object] = 0;
+	object_pos_y[next_object] = 0;
+	object_pos_z[next_object] = 0;
+	object_rot_x[next_object] = 0;
+	object_rot_y[next_object] = 0;
+	object_rot_z[next_object] = 0;
+	generate_box(16, 32, 24);
+	object_points[next_object] = next_point - object_firstpoint[next_object];
+	next_object++;
+
+	object_firstpoint[next_object] = next_point;
+	object_firstface[next_object] = next_face;
+	object_pos_x[next_object] = -64;
+	object_pos_y[next_object] = -5;
+	object_pos_z[next_object] = -5;
+	object_rot_x[next_object] = 4;
+	object_rot_y[next_object] = 8;
+	object_rot_z[next_object] = 16;
+	generate_box(16, 16, 16);
+	object_points[next_object] = next_point - object_firstpoint[next_object];
+
+	unsigned char pd = 0;
+
 	while (1)
 	{
 		basic_input();
@@ -160,11 +163,29 @@ void app_main()
 				}
 			}
 
-			rot_x = rot_pos_x / 5;
-			rot_y = rot_pos_y / 5;
-			rot_z = rot_pos_z / 5;
+			object_rot_x[0] = rot_pos_x / 5;
+			object_rot_y[0] = rot_pos_y / 5;
+			object_rot_z[0] = rot_pos_z / 5;
 
-			render_points();
+			pd++;
+			if (pd >= rot_max)
+			{
+				pd = 0;
+			}
+			object_pos_y[1] = lut_sin_5[pd];
+
+			object_rot_x[2] = 71 - object_rot_x[0];
+			object_rot_y[2] = 71 - object_rot_x[1];
+			object_rot_z[2] = 71 - object_rot_x[2];
+			// object_rot_x[2] = rot_pos_x / 4;
+			// object_rot_y[2] = rot_pos_y / 4;
+			// object_rot_z[2] = rot_pos_z / 4;
+
+			// object_rot_x[2] = 360 - object_rot_x[0];
+			// object_rot_y[2] = 360 - object_rot_y[0];
+			// object_rot_z[2] = 360 - object_rot_z[0];
+
+			render_objects();
 		}
 		vblank_last = vblank;
 	}
