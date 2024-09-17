@@ -23,6 +23,7 @@
 #define VECTORS_VECTORS_H
 
 extern unsigned char vector_address;
+extern unsigned char vector_address_offset;
 extern void add_line(unsigned char length, unsigned char intensity, unsigned char colour);
 extern void add_point(unsigned char x, unsigned char y);
 

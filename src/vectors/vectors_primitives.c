@@ -23,32 +23,31 @@
 
 void generate_box(unsigned char size_x, unsigned char size_y, unsigned char size_z)
 {
-	// Bottom
-	face_points[next_face] = 4;
-	add_point3(next_face, -size_x, -size_y, -size_z);
-	add_point3(next_face, size_x, -size_y, -size_z);
-	add_point3(next_face, size_x, -size_y, size_z);
-	add_point3(next_face, -size_x, -size_y, size_z);
-	next_face++;
-	// Top
-	face_points[next_face] = 4;
-	add_point3(next_face, -size_x, size_y, -size_z);
-	add_point3(next_face, size_x, size_y, -size_z);
-	add_point3(next_face, size_x, size_y, size_z);
-	add_point3(next_face, -size_x, size_y, size_z);
-	next_face++;
-	// Left
-	face_points[next_face] = 4;
-	add_point3(next_face, -size_x, -size_y, -size_z);
-	add_point3(next_face, -size_x, size_y, -size_z);
-	add_point3(next_face, -size_x, size_y, size_z);
-	add_point3(next_face, -size_x, -size_y, size_z);
-	next_face++;
-	// Right
-	face_points[next_face] = 4;
-	add_point3(next_face, size_x, -size_y, -size_z);
-	add_point3(next_face, size_x, size_y, -size_z);
-	add_point3(next_face, size_x, size_y, size_z);
-	add_point3(next_face, size_x, -size_y, size_z);
-	next_face++;
+	// Top  points in order TLF, TRF, TRB, TLB
+	add_point3d(-size_x, -size_y, size_z);
+	add_point3d(size_x, -size_y, size_z);
+	add_point3d(size_x, -size_y, -size_z);
+	add_point3d(-size_x, -size_y, -size_z);
+	// Bottom points in order BLF, BRF, BRB, BLB
+	add_point3d(-size_x, size_y, size_z);
+	add_point3d(size_x, size_y, size_z);
+	add_point3d(size_x, size_y, -size_z);
+	add_point3d(-size_x, size_y, -size_z);
+	
+	// Top edges
+	add_edge3d(0,1);
+	add_edge3d(1,2);
+	add_edge3d(2,3);
+	add_edge3d(3,0);
+	// Bottom edges
+	add_edge3d(4,5);
+	add_edge3d(5,6);
+	add_edge3d(6,7);
+	add_edge3d(7,4);
+	// Vert edges
+	add_edge3d(0,4);
+	add_edge3d(1,5);
+	add_edge3d(2,6);
+	add_edge3d(3,7);
+
 }

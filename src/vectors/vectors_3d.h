@@ -29,33 +29,41 @@ extern signed short translate_x;
 extern signed short translate_y;
 extern signed short translate_z;
 
-#define const_faces_max 24
+// #define const_faces_max 24
 #define const_points_max 64
+#define const_edges_max 64
 #define const_objects_max 3
 
 #define rot_max 72
 
 extern unsigned char object_firstpoint[];
-extern unsigned char object_firstface[];
+// extern unsigned char object_firstface[];
+extern unsigned char object_firstedge[];
 extern unsigned char object_points[];
+extern unsigned char object_edges[];
 extern signed short object_pos_x[];
 extern signed short object_pos_y[];
 extern signed short object_pos_z[];
 extern unsigned short object_rot_x[];
 extern unsigned short object_rot_y[];
 extern unsigned short object_rot_z[];
-extern unsigned char next_object;
 
-extern unsigned char face_points[];
-extern unsigned char point_face[];
+// extern unsigned char face_points[];
+// extern unsigned char point_face[];
 extern signed short point_x[];
 extern signed short point_y[];
 extern signed short point_z[];
 
-extern unsigned char next_point;
-extern unsigned char next_face;
+extern unsigned char edge_p1[];
+extern unsigned char edge_p2[];
 
-extern void add_point3(unsigned char f, short x, signed short y, signed short z);
+extern unsigned char next_object;
+extern unsigned char next_point;
+extern unsigned char next_edge;
+// extern unsigned char next_face;
+
+extern void add_point3d(signed short x, signed short y, signed short z);
+extern void add_edge3d(unsigned char p1, unsigned char p2);
 extern void render_objects();
 
 #endif

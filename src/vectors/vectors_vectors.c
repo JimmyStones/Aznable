@@ -23,6 +23,7 @@
 #include "vectors_vectors.h"
 
 unsigned char vector_address = 0;
+unsigned char vector_address_offset = 0;
 
 void add_line(unsigned char length, unsigned char intensity, unsigned char colour)
 {
@@ -39,4 +40,3 @@ void add_point(unsigned char x, unsigned char y)
 	vectorram[vector_address] = y;
 	vector_address++;
 }
-
