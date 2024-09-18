@@ -72,17 +72,18 @@ unsigned short object_rot_x[const_objects_max];
 unsigned short object_rot_y[const_objects_max];
 unsigned short object_rot_z[const_objects_max];
 unsigned char next_object = 0;
-// unsigned char next_face = 0;
 unsigned char next_point = 0;
 unsigned char next_edge = 0;
 
-// unsigned char face_points[const_faces_max];
-// unsigned char point_face[const_points_max];
+unsigned char edge_p1[const_edges_max];
+unsigned char edge_p2[const_edges_max];
+
 signed short point_x[const_points_max];
 signed short point_y[const_points_max];
 signed short point_z[const_points_max];
-unsigned char edge_p1[const_edges_max];
-unsigned char edge_p2[const_edges_max];
+signed short transformed_point_x[const_points_max];
+signed short transformed_point_y[const_points_max];
+signed short transformed_point_z[const_points_max];
 
 void add_point3d(signed short x, signed short y, signed short z)
 {
@@ -109,13 +110,11 @@ signed short ty;
 signed short tz;
 signed short div = 64;
 signed short mul = 8;
-// unsigned char last_face;
 unsigned char zoom_div = 8;
 unsigned char zoom_bias = 64;
 
-void draw_point3d(unsigned char p)
+void transform_point3d(unsigned char p)
 {
-
 	signed short r1;
 	signed short r2;
 	signed short x = point_x[p] * mul;
@@ -161,13 +160,20 @@ void draw_point3d(unsigned char p)
 	x = nx;
 	y = ny;
 
-	x += tx;
-	y += ty;
-	z += tz;
-	signed short d = 2 + (((z / mul) + zoom_bias) / zoom_div);
+	transformed_point_x[p] = x;
+	transformed_point_y[p] = y;
+	transformed_point_z[p] = z;
+}
 
-	signed short sx = (x / d) + 128;
-	signed short sy = (y / d) + 128;
+void draw_point3d(unsigned char p)
+{
+	signed short x = transformed_point_x[p] + tx;
+	signed short y = transformed_point_y[p] + ty;
+	signed short z = transformed_point_z[p] + tz;
+	signed short dx = 2 + (((z / mul) + zoom_bias) / zoom_div);
+	signed short dy = (dx * 4) / 3;
+	signed short sx = (x / dx) + 128;
+	signed short sy = (y / dy) + 128;
 	if (sx < 0)
 	{
 		sx = 0;
@@ -184,7 +190,7 @@ void render_objects()
 	vector_address = vector_address_offset;
 	for (unsigned char o = 0; o <= next_object; o++)
 	{
-		unsigned char first_point = 0;
+		// Generate rotates
 		unsigned char rot_x = object_rot_x[o];
 		unsigned char rot_y = object_rot_y[o];
 		unsigned char rot_z = object_rot_z[o];
@@ -194,6 +200,14 @@ void render_objects()
 		siny = lut_sin_5[rot_y];
 		cosz = lut_cos_5[rot_z];
 		sinz = lut_sin_5[rot_z];
+		unsigned char fp = object_firstpoint[o];
+		unsigned char lp = fp + object_points[o];
+		for (unsigned char p = fp; p < lp; p++)
+		{
+			transform_point3d(p);
+		}
+
+		// Generate translates
 		tx = translate_x + (object_pos_x[o] * mul);
 		ty = translate_y + (object_pos_y[o] * mul);
 		tz = translate_z + (object_pos_z[o] * mul);
@@ -201,9 +215,6 @@ void render_objects()
 		unsigned char le = fe + object_edges[o];
 		for (unsigned char e = fe; e < le; e++)
 		{
-			// write_stringf("line %d", colour_cga_lightred, 0, e, e);
-			// write_stringf("%d > ", colour_cga_lightred, 10, e, edge_p1[e]);
-			// write_stringf("%d", colour_cga_lightred, 14, e, edge_p2[e]);
 			add_line(1, 15, 15);
 			draw_point3d(edge_p1[e]);
 			draw_point3d(edge_p2[e]);

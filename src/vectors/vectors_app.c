@@ -39,7 +39,7 @@ signed char rot_timer_x;
 signed char rot_timer_y;
 signed char rot_timer_z;
 signed char rot_speed_x = 0;
-signed char rot_speed_y = 8;
+signed char rot_speed_y = 4;
 signed char rot_speed_z = 0;
 signed short rot_pos_x;
 signed short rot_pos_y;
@@ -74,18 +74,18 @@ void app_main()
 	clear_chars(0);
 	set_default_char_palette();
 
-	object_firstpoint[next_object] = next_point;
-	object_firstedge[next_object] = next_edge;
-	object_pos_x[next_object] = 64;
-	object_pos_y[next_object] = 0;
-	object_pos_z[next_object] = 0;
-	object_rot_x[next_object] = 0;
-	object_rot_y[next_object] = 0;
-	object_rot_z[next_object] = 0;
-	generate_box(16, 32, 24);
-	object_points[next_object] = next_point - object_firstpoint[next_object];
-	object_edges[next_object] = next_edge - object_firstedge[next_object];
-	next_object++;
+	// object_firstpoint[next_object] = next_point;
+	// object_firstedge[next_object] = next_edge;
+	// object_pos_x[next_object] = 64;
+	// object_pos_y[next_object] = 0;
+	// object_pos_z[next_object] = 0;
+	// object_rot_x[next_object] = 0;
+	// object_rot_y[next_object] = 0;
+	// object_rot_z[next_object] = 0;
+	// generate_box(16, 32, 24);
+	// object_points[next_object] = next_point - object_firstpoint[next_object];
+	// object_edges[next_object] = next_edge - object_firstedge[next_object];
+	// next_object++;
 
 	object_firstpoint[next_object] = next_point;
 	object_firstedge[next_object] = next_edge;
@@ -98,19 +98,19 @@ void app_main()
 	generate_box(24, 48, 32);
 	object_points[next_object] = next_point - object_firstpoint[next_object];
 	object_edges[next_object] = next_edge - object_firstedge[next_object];
-	next_object++;
+	// next_object++;
 
-	object_firstpoint[next_object] = next_point;
-	object_firstedge[next_object] = next_edge;
-	object_pos_x[next_object] = -64;
-	object_pos_y[next_object] = -5;
-	object_pos_z[next_object] = -5;
-	object_rot_x[next_object] = 0;
-	object_rot_y[next_object] = 0;
-	object_rot_z[next_object] = 0;
-	generate_box(12, 18, 12);
-	object_points[next_object] = next_point - object_firstpoint[next_object];
-	object_edges[next_object] = next_edge - object_firstedge[next_object];
+	// object_firstpoint[next_object] = next_point;
+	// object_firstedge[next_object] = next_edge;
+	// object_pos_x[next_object] = -64;
+	// object_pos_y[next_object] = -5;
+	// object_pos_z[next_object] = -5;
+	// object_rot_x[next_object] = 0;
+	// object_rot_y[next_object] = 0;
+	// object_rot_z[next_object] = 0;
+	// generate_box(12, 18, 12);
+	// object_points[next_object] = next_point - object_firstpoint[next_object];
+	// object_edges[next_object] = next_edge - object_firstedge[next_object];
 
 	unsigned char pd = 0;
 
@@ -184,7 +184,9 @@ void app_main()
 			object_rot_y[2] = 71 - object_rot_y[0];
 			object_rot_z[2] = 71 - object_rot_z[0];
 
+			timer[0] = 0;
 			render_objects();
+			timer[0] = 0;
 		}
 		vblank_last = vblank;
 	}

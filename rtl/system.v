@@ -257,7 +257,7 @@ always @(posedge clk_24) begin
 	//if(tilemapram_cs  && !cpu_wr_n) $display("tilemapram_cs addr=%x addr2=%x wraddr=%x dout=%x", cpu_addr, cpu_addr[TILEMAP_RAM_WIDTH-1:0], tilemapram_addr_wr, cpu_dout);
 	//if(timestamp_cs && !cpu_wr_n) $display("timestamp debug a=%x wr=%x", timestamp_addr[1:0], cpu_dout);
 	//if(timer_cs) $display("timer_cs wr=%b timer=%d addr=%d  frame_time=%d  hcnt=%d  vcnt=%d", ~cpu_wr_n, timer, cpu_addr, frame_timer, hcnt, vcnt);
-	//if(timer_cs && ~cpu_wr_n) $display("timer clear @ timer=%d frame_time=%d  hcnt=%d  vcnt=%d", timer, frame_timer, hcnt, vcnt);
+	if(timer_cs && ~cpu_wr_n) $display("timer clear @ timer=%d cycle_timer=%d  hcnt=%d  vcnt=%d", timer, cycle_timer, hcnt, vcnt);
 end
 
 // ROM data available to CPU
