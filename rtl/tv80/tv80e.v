@@ -43,14 +43,14 @@ module tv80e (/*AUTOARG*/
   input         nmi_n;
   input         busrq_n;
   output        m1_n;
-  output        mreq_n;
+  output        mreq_n/*verilator public_flat*/;
   output        iorq_n;
   output        rd_n;
   output        wr_n;
   output        rfsh_n;
   output        halt_n;
   output        busak_n;
-  output [15:0] A;
+  output [15:0] A/*verilator public_flat*/;
   input [7:0]   di;
   output [7:0]  dout;
 

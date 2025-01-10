@@ -39,8 +39,6 @@ module dpram_w1r2 #(
 initial begin
 	if (init_file>0)
 	begin
-		// $display("Loading dpram from file:");
-		// $display(init_file);
 		$readmemh(init_file, mem);
 	end
 end

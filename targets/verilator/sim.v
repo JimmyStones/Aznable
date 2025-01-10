@@ -93,7 +93,7 @@ module emu (
 );
 
 // Clock divider from JTFRAME
-wire ce_6;
+wire ce_6/*verilator public_flat*/;
 wire ce_2;
 /* verilator lint_off PINMISSING */
 jtframe_cen24 divider

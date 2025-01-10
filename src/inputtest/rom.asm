@@ -41,6 +41,7 @@
 	.globl _chram
 	.globl _tilemapram
 	.globl _tilemapctl
+	.globl _vectorram
 	.globl _musicram
 	.globl _sndram
 	.globl _system_menu
@@ -68,22 +69,23 @@
 	.area _DATA
 _input0	=	0x8000
 _video_ctl	=	0x8001
-_timestamp	=	0x8080
-_timer	=	0x80c0
-_joystick	=	0x8100
-_analog_l	=	0x8200
-_analog_r	=	0x8280
-_paddle	=	0x8300
-_spinner	=	0x8380
-_ps2_key	=	0x8400
-_ps2_mouse	=	0x8480
-_starfield1	=	0x8500
-_starfield2	=	0x8510
-_starfield3	=	0x8520
-_system_pause	=	0x8530
-_system_menu	=	0x8531
-_sndram	=	0x8580
-_musicram	=	0x8590
+_timestamp	=	0x8002
+_timer	=	0x8022
+_joystick	=	0x803a
+_analog_l	=	0x80fa
+_analog_r	=	0x815a
+_paddle	=	0x81ba
+_spinner	=	0x81ea
+_ps2_key	=	0x824a
+_ps2_mouse	=	0x8256
+_starfield1	=	0x8286
+_starfield2	=	0x8296
+_starfield3	=	0x82a6
+_system_pause	=	0x82b6
+_system_menu	=	0x82b7
+_sndram	=	0x8300
+_musicram	=	0x8310
+_vectorram	=	0x8320
 _tilemapctl	=	0x8600
 _tilemapram	=	0x8610
 _chram	=	0x9200
@@ -129,12 +131,12 @@ _app_main::
 	ld	l, #0x00
 	ld	d, l
 	ld	b, #0x08
-00233$:
+00232$:
 	add	hl, hl
-	jr	NC,00234$
+	jr	NC,00233$
 	add	hl, de
-00234$:
-	djnz	00233$
+00233$:
+	djnz	00232$
 	ld	(_chram_size), hl
 ;os.c:43: set_default_char_palette();
 	call	_set_default_char_palette
@@ -447,15 +449,17 @@ _app_main::
 	call	_set_char_palette
 	pop	af
 	pop	af
-;os.c:83: while (1)
-00124$:
-;os.c:85: hsync = input0 & 0x80;
+;os.c:83: app_zorblaxx();
+	call	_app_zorblaxx
+;os.c:87: while (1)
+00123$:
+;os.c:89: hsync = input0 & 0x80;
 	ld	iy, #_input0
 	ld	a, 0 (iy)
 	rlc	a
 	and	a, #0x01
 	ld	(_hsync+0), a
-;os.c:86: vsync = input0 & 0x40;
+;os.c:90: vsync = input0 & 0x40;
 	ld	a, 0 (iy)
 	and	a, #0x40
 	ld	c, a
@@ -466,7 +470,7 @@ _app_main::
 	ld	a, #0x00
 	rla
 	ld	(_vsync+0), a
-;os.c:87: hblank = CHECK_BIT(input0, INPUT_HBLANK);
+;os.c:91: hblank = CHECK_BIT(input0, INPUT_HBLANK);
 	ld	a, 0 (iy)
 	and	a, #0x20
 	ld	c, a
@@ -474,7 +478,7 @@ _app_main::
 	cp	a, c
 	rla
 	ld	(_hblank+0), a
-;os.c:88: vblank = CHECK_BIT(input0, INPUT_VBLANK);
+;os.c:92: vblank = CHECK_BIT(input0, INPUT_VBLANK);
 	ld	a, 0 (iy)
 	and	a, #0x10
 	ld	c, a
@@ -482,7 +486,7 @@ _app_main::
 	cp	a, c
 	rla
 	ld	(_vblank+0), a
-;os.c:89: switch (state)
+;os.c:93: switch (state)
 	ld	iy, #_state
 	ld	a, 0 (iy)
 	dec	a
@@ -545,187 +549,173 @@ _app_main::
 	sub	a, #0x2b
 	jr	Z,00120$
 	jp	00121$
-;os.c:91: case STATE_START_INPUTTESTER:
+;os.c:95: case STATE_START_INPUTTESTER:
 00101$:
-;os.c:92: start_inputtester_digital();
+;os.c:96: start_inputtester_digital();
 	call	_start_inputtester_digital
-;os.c:93: break;
-	jp	00122$
-;os.c:94: case STATE_INPUTTESTER:
+;os.c:97: break;
+	jp	00121$
+;os.c:98: case STATE_INPUTTESTER:
 00102$:
-;os.c:95: inputtester_digital();
+;os.c:99: inputtester_digital();
 	call	_inputtester_digital
-;os.c:96: break;
-	jp	00122$
-;os.c:98: case STATE_START_INPUTTESTERADVANCED:
-00103$:
-;os.c:99: start_inputtester_advanced();
-	call	_start_inputtester_advanced
 ;os.c:100: break;
-	jp	00122$
-;os.c:101: case STATE_INPUTTESTERADVANCED:
+	jp	00121$
+;os.c:102: case STATE_START_INPUTTESTERADVANCED:
+00103$:
+;os.c:103: start_inputtester_advanced();
+	call	_start_inputtester_advanced
+;os.c:104: break;
+	jp	00121$
+;os.c:105: case STATE_INPUTTESTERADVANCED:
 00104$:
-;os.c:102: inputtester_advanced();
+;os.c:106: inputtester_advanced();
 	call	_inputtester_advanced
-;os.c:103: break;
-	jp	00122$
-;os.c:105: case STATE_START_INPUTTESTERANALOG:
-00105$:
-;os.c:106: start_inputtester_analog();
-	call	_start_inputtester_analog
 ;os.c:107: break;
-	jp	00122$
-;os.c:108: case STATE_INPUTTESTERANALOG:
+	jr	00121$
+;os.c:109: case STATE_START_INPUTTESTERANALOG:
+00105$:
+;os.c:110: start_inputtester_analog();
+	call	_start_inputtester_analog
+;os.c:111: break;
+	jr	00121$
+;os.c:112: case STATE_INPUTTESTERANALOG:
 00106$:
-;os.c:109: inputtester_analog();
+;os.c:113: inputtester_analog();
 	call	_inputtester_analog
-;os.c:110: break;
-	jr	00122$
-;os.c:112: case STATE_START_BTNTEST:
-00107$:
-;os.c:113: start_btntest();
-	call	_start_btntest
 ;os.c:114: break;
-	jr	00122$
-;os.c:115: case STATE_BTNTEST:
+	jr	00121$
+;os.c:116: case STATE_START_BTNTEST:
+00107$:
+;os.c:117: start_btntest();
+	call	_start_btntest
+;os.c:118: break;
+	jr	00121$
+;os.c:119: case STATE_BTNTEST:
 00108$:
-;os.c:116: btntest();
+;os.c:120: btntest();
 	call	_btntest
-;os.c:117: break;
-	jr	00122$
-;os.c:119: case STATE_START_GUNSIGHT:
-00109$:
-;os.c:120: start_gunsight();
-	call	_start_gunsight
 ;os.c:121: break;
-	jr	00122$
-;os.c:122: case STATE_GUNSIGHT:
+	jr	00121$
+;os.c:123: case STATE_START_GUNSIGHT:
+00109$:
+;os.c:124: start_gunsight();
+	call	_start_gunsight
+;os.c:125: break;
+	jr	00121$
+;os.c:126: case STATE_GUNSIGHT:
 00110$:
-;os.c:123: gunsight();
+;os.c:127: gunsight();
 	call	_gunsight
-;os.c:124: break;
-	jr	00122$
-;os.c:126: case STATE_START_MENU:
-00111$:
-;os.c:127: start_menu();
-	call	_start_menu
 ;os.c:128: break;
-	jr	00122$
-;os.c:129: case STATE_MENU:
+	jr	00121$
+;os.c:130: case STATE_START_MENU:
+00111$:
+;os.c:131: start_menu();
+	call	_start_menu
+;os.c:132: break;
+	jr	00121$
+;os.c:133: case STATE_MENU:
 00112$:
-;os.c:130: menu();
+;os.c:134: menu();
 	call	_menu
-;os.c:131: break;
-	jr	00122$
-;os.c:133: case STATE_FADEOUT:
-00113$:
-;os.c:134: fadeout();
-	call	_fadeout
 ;os.c:135: break;
-	jr	00122$
-;os.c:136: case STATE_FADEIN:
+	jr	00121$
+;os.c:137: case STATE_FADEOUT:
+00113$:
+;os.c:138: fadeout();
+	call	_fadeout
+;os.c:139: break;
+	jr	00121$
+;os.c:140: case STATE_FADEIN:
 00114$:
-;os.c:137: fadein();
+;os.c:141: fadein();
 	call	_fadein
-;os.c:138: break;
-	jr	00122$
-;os.c:140: case STATE_START_ATTRACT:
+;os.c:142: break;
+	jr	00121$
+;os.c:144: case STATE_START_ATTRACT:
 00115$:
-;os.c:141: state = 0;
+;os.c:145: state = 0;
 	ld	hl,#_state + 0
 	ld	(hl), #0x00
-;os.c:142: loader("SNEK.AZN");
+;os.c:146: loader("SNEK.AZN");
 	ld	hl, #___str_0
 	push	hl
 	call	_loader
 	pop	af
-;os.c:143: start_snek_attract();
+;os.c:147: start_snek_attract();
 	call	_start_snek_attract
-;os.c:144: break;
-	jr	00122$
-;os.c:145: case STATE_ATTRACT:
+;os.c:148: break;
+	jr	00121$
+;os.c:149: case STATE_ATTRACT:
 00116$:
-;os.c:146: snek_attract();
+;os.c:150: snek_attract();
 	call	_snek_attract
-;os.c:147: break;
-	jr	00122$
-;os.c:148: case STATE_START_CREDITS:
+;os.c:151: break;
+	jr	00121$
+;os.c:152: case STATE_START_CREDITS:
 00117$:
-;os.c:149: app_credits();
+;os.c:153: app_credits();
 	call	_app_credits
-;os.c:150: break;
-	jr	00122$
-;os.c:152: case STATE_START_GAME_SNEK:
-00118$:
-;os.c:153: start_snek_gameplay();
-	call	_start_snek_gameplay
 ;os.c:154: break;
-	jr	00122$
-;os.c:155: case STATE_GAME_SNEK:
+	jr	00121$
+;os.c:156: case STATE_START_GAME_SNEK:
+00118$:
+;os.c:157: start_snek_gameplay();
+	call	_start_snek_gameplay
+;os.c:158: break;
+	jr	00121$
+;os.c:159: case STATE_GAME_SNEK:
 00119$:
-;os.c:156: snek_gameplay();
+;os.c:160: snek_gameplay();
 	call	_snek_gameplay
-;os.c:157: break;
-	jr	00122$
-;os.c:158: case STATE_START_ZORBLAXX:
+;os.c:161: break;
+	jr	00121$
+;os.c:162: case STATE_START_ZORBLAXX:
 00120$:
-;os.c:159: state = 0;
+;os.c:163: state = 0;
 	ld	hl,#_state + 0
 	ld	(hl), #0x00
-;os.c:160: loader("ZORBLAXX.AZN");
+;os.c:164: loader("ZORBLAXX.AZN");
 	ld	hl, #___str_1
 	push	hl
 	call	_loader
 	pop	af
-;os.c:161: app_zorblaxx();
+;os.c:165: app_zorblaxx();
 	call	_app_zorblaxx
-;os.c:162: break;
-	jr	00122$
-;os.c:164: default:
+;os.c:167: }
 00121$:
-;os.c:169: loader("INPUTTESTER.AZN");
-	ld	hl, #___str_2
-	push	hl
-	call	_loader
-	pop	af
-;os.c:170: start_inputtester_digital();
-	call	_start_inputtester_digital
-;os.c:175: }
-00122$:
-;os.c:177: hsync_last = hsync;
+;os.c:169: hsync_last = hsync;
 	ld	a,(#_hsync + 0)
 	ld	iy, #_hsync_last
 	ld	0 (iy), a
-;os.c:178: vsync_last = vsync;
+;os.c:170: vsync_last = vsync;
 	ld	a,(#_vsync + 0)
 	ld	iy, #_vsync_last
 	ld	0 (iy), a
-;os.c:179: hblank_last = hblank;
+;os.c:171: hblank_last = hblank;
 	ld	a,(#_hblank + 0)
 	ld	iy, #_hblank_last
 	ld	0 (iy), a
-;os.c:180: vblank_last = vblank;
+;os.c:172: vblank_last = vblank;
 	ld	a,(#_vblank + 0)
 	ld	iy, #_vblank_last
 	ld	0 (iy), a
-;os.c:182: }
-	jp	00124$
+;os.c:174: }
+	jp	00123$
 ___str_0:
 	.ascii "SNEK.AZN"
 	.db 0x00
 ___str_1:
 	.ascii "ZORBLAXX.AZN"
 	.db 0x00
-___str_2:
-	.ascii "INPUTTESTER.AZN"
-	.db 0x00
-;os.c:185: void main()
+;os.c:177: void main()
 ;	---------------------------------
 ; Function main
 ; ---------------------------------
 _main::
-;os.c:187: app_main();
-;os.c:188: }
+;os.c:179: app_main();
+;os.c:180: }
 	jp	_app_main
 	.area _CODE
 	.area _INITIALIZER

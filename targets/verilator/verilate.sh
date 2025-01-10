@@ -1,4 +1,4 @@
-OPTIMIZE="-O3 --x-assign fast --x-initial fast --noassert"
+OPTIMIZE="-O3 --x-assign fast --x-initial fast"
 #WARNINGS="-Wno-TIMESCALEMOD"
 DEFINES="+define+SIMULATION=1 "
 RTL="../../rtl"

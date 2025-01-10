@@ -25,7 +25,7 @@
 
 module tv80_core (/*AUTOARG*/
   // Outputs
-  m1_n, iorq, no_read, write, rfsh_n, halt_n, busak_n, A, dout, mc,
+  m1_n, iorq, no_read, write, rfsh_n, halt_n, busak_n, A/*verilator public_flat*/, dout, mc,
   ts, intcycle_n, IntE, stop,
   // Inputs
   reset_n, clk, cen, wait_n, int_n, nmi_n, busrq_n, dinst, di
@@ -44,21 +44,21 @@ module tv80_core (/*AUTOARG*/
   parameter Flag_Z = 6;
   parameter Flag_S = 7;
 
-  input     reset_n;            
+  input     reset_n/*verilator public_flat*/;            
   input     clk;                
-  input     cen;                
+  input     cen/*verilator public_flat*/;                
   input     wait_n;             
   input     int_n;              
   input     nmi_n;              
   input     busrq_n;            
-  output    m1_n;               
+  output    m1_n/*verilator public_flat*/;               
   output    iorq;               
   output    no_read;            
   output    write;              
   output    rfsh_n;             
   output    halt_n;             
   output    busak_n;            
-  output [15:0] A; 
+  output [15:0] A/*verilator public_flat*/; 
   input [7:0]   dinst;  
   input [7:0]   di;     
   output [7:0]  dout;     
@@ -385,8 +385,8 @@ module tv80_core (/*AUTOARG*/
           mcycles <= #1 3'b000;
           dout <= #1 8'b00000000;
 
-          ACC <= #1 8'hFF;
-          F <= #1 8'hFF;
+          ACC <= #1 8'h00;
+          F <= #1 8'h40;
           Ap <= #1 8'hFF;
           Fp <= #1 8'hFF;
           I <= #1 0;
@@ -1031,7 +1031,7 @@ module tv80_core (/*AUTOARG*/
      .DOBL                 (RegBusB[7:0]),
      .DOCH                 (RegBusC[15:8]),
      .DOCL                 (RegBusC[7:0])
-     );
+    );
 
   //-------------------------------------------------------------------------
   //
@@ -1385,6 +1385,6 @@ module tv80_core (/*AUTOARG*/
             end
         end
     end // always @ *
-  
+
 endmodule // T80
 

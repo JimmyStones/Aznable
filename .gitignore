@@ -40,6 +40,7 @@ c5_pin_model_dump.txt
 targets/verilator/.vs/*
 targets/verilator/obj_dir/*
 targets/verilator/x64/*
+targets/verilator/sim/x64/*
 targets/verilator/roms/*
 targets/verilator/*.hex
 targets/verilator/imgui.ini

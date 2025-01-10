@@ -12,12 +12,20 @@
 #include <dinput.h>
 #endif
 
+#define FMT_HEADER_ONLY
+#include <fmt/core.h>
+
 #include "sim_console.h"
 #include "sim_bus.h"
 #include "sim_video.h"
 #include "sim_audio.h"
 #include "sim_input.h"
 #include "sim_clock.h"
+
+//#define DISASSEMBLE_CPU
+#ifdef DISASSEMBLE_CPU
+#include "disasm_z80.h"
+#endif
 
 #include "../imgui/imgui_memory_editor.h"
 #include "../imgui/ImGuiFileDialog.h"
@@ -96,6 +104,11 @@ SimClock clk_sys(1);
 SimAudio audio(clk_sys_freq, false);
 #endif
 
+// Dissasembler
+#ifdef DISASSEMBLE_CPU
+Disasm_Z80 disasm_z80(console);
+#endif
+
 // Reset simulation variables and clocks
 void resetSim() {
 	main_time = 0;
@@ -125,6 +138,11 @@ int verilate() {
 				bus.BeforeEval();
 			}
 			top->eval();
+
+#ifdef DISASSEMBLE_CPU
+			if (disasm_z80.Process()) { run_enable = false; }
+#endif
+
 			if (clk_sys.clk) { bus.AfterEval(); }
 		}
 
@@ -170,6 +188,28 @@ int main(int argc, char** argv, char** env) {
 #ifdef WIN32
 	// Attach debug console to the verilated code
 	Verilated::setDebug(console);
+#endif
+
+#ifdef DISASSEMBLE_CPU
+	// Attach disassembler
+	disasm_z80.cen = &top->emu__DOT__system__DOT__T80x__DOT__i_tv80_core__DOT__cen;
+	disasm_z80.reset_n = &top->emu__DOT__system__DOT__T80x__DOT__i_tv80_core__DOT__reset_n;
+	disasm_z80.m1_n = &top->emu__DOT__system__DOT__T80x__DOT__i_tv80_core__DOT__m1_n;
+	disasm_z80.mreq_n = &top->emu__DOT__system__DOT__T80x__DOT__mreq_n;
+	disasm_z80.A = &top->emu__DOT__system__DOT__T80x__DOT__i_tv80_core__DOT__ACC;
+	disasm_z80.F = &top->emu__DOT__system__DOT__T80x__DOT__i_tv80_core__DOT__F;
+	disasm_z80.Address = &top->emu__DOT__system__DOT__cpu_addr;
+	disasm_z80.din = &top->emu__DOT__system__DOT__cpu_din;
+	disasm_z80.cpu_tstate = &top->emu__DOT__system__DOT__T80x__DOT__i_tv80_core__DOT__tstate;
+	disasm_z80.cpu_mstate = &top->emu__DOT__system__DOT__T80x__DOT__i_tv80_core__DOT__mcycle;
+	disasm_z80.pc = &top->emu__DOT__system__DOT__T80x__DOT__i_tv80_core__DOT__PC;
+	disasm_z80.Inst1 = &top->emu__DOT__system__DOT__T80x__DOT__i_tv80_core__DOT__IR;
+
+	// Load trace
+	disasm_z80.LoadTrace("trace/slow_log.tr");
+	disasm_z80.StopOnMismatch(true);
+	//disasm_z80.SuppressUntil(150000);
+
 #endif
 
 	// Attach bus
@@ -285,6 +325,9 @@ int main(int argc, char** argv, char** env) {
 		//ImGui::End();
 		//ImGui::Begin("WKRAM Editor");
 		//mem_edit.DrawContents(&top->emu__DOT__system__DOT__wkram__DOT__mem, 16384, 0);
+		//ImGui::End();
+		//ImGui::Begin("Vector RAM Editor");
+		//mem_edit.DrawContents(&top->emu__DOT__system__DOT__vulcan__DOT__vectorram__DOT__mem, 512, 0);
 		//ImGui::End();
 		//ImGui::Begin("CHRAM Editor");
 		//mem_edit.DrawContents(&top->emu__DOT__system__DOT__chram__DOT__mem, 2048, 0);
@@ -503,4 +546,4 @@ int main(int argc, char** argv, char** env) {
 	input.CleanUp();
 
 	return 0;
-}
+	}

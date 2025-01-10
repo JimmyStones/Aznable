@@ -26,13 +26,12 @@ module dpram #(
 	parameter data_width = 8,
     parameter init_file= ""
 ) (
-	input	wire						clock_a,
+	input	wire						clock,
+
 	input	wire						wren_a,
 	input	wire	[address_width-1:0]	address_a,
 	input	wire	[data_width-1:0]	data_a,
 	output	reg		[data_width-1:0]	q_a,
-
-	input	wire						clock_b,
 	input	wire						wren_b,
 	input	wire	[address_width-1:0]	address_b,
 	input	wire	[data_width-1:0]	data_b,
@@ -49,17 +48,16 @@ initial begin
 end
 
 localparam ramLength = (2**address_width);
-reg [data_width-1:0] mem [ramLength-1:0];
+(* ramstyle="no_rw_check" *) reg [data_width-1:0] mem [ramLength-1:0];
 
-always @(posedge clock_a) begin
+always @(posedge clock) begin
 	q_a <= mem[address_a];
 	if(wren_a) begin
 		q_a <= data_a;
 		mem[address_a] <= data_a;
 	end
 end
-
-always @(posedge clock_b) begin
+always @(posedge clock) begin
 	q_b <= mem[address_b];
 	if(wren_b) begin
 		q_b <= data_b;
