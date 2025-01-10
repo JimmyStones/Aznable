@@ -22,6 +22,7 @@
 #ifndef VECTORS_PRIMITIVES_H
 #define VECTORS_PRIMITIVES_H
 
+extern void generate_sidewinder();
 extern void generate_box(unsigned char size_x, unsigned char size_y, unsigned char size_z);
 
 #endif

@@ -32,14 +32,18 @@ extern signed short translate_z;
 // #define const_faces_max 24
 #define const_points_max 64
 #define const_edges_max 64
+#define const_faces_max 64
 #define const_objects_max 3
 
 #define rot_max 72
 
 extern unsigned char object_firstpoint[];
 extern unsigned char object_firstedge[];
+extern unsigned char object_firstface[];
 extern unsigned char object_points[];
 extern unsigned char object_edges[];
+extern unsigned char object_faces[];
+
 extern signed short object_pos_x[];
 extern signed short object_pos_y[];
 extern signed short object_pos_z[];
@@ -53,16 +57,38 @@ extern signed short point_z[];
 extern signed short transformed_point_x[];
 extern signed short transformed_point_y[];
 extern signed short transformed_point_z[];
+extern unsigned char point_face1[];
+extern unsigned char point_face2[];
+extern unsigned char point_face3[];
+extern unsigned char point_face4[];
 
 extern unsigned char edge_p1[];
 extern unsigned char edge_p2[];
 
+extern signed short face_normal_x[];
+extern signed short face_normal_y[];
+extern signed short face_normal_z[];
+
 extern unsigned char next_object;
 extern unsigned char next_point;
 extern unsigned char next_edge;
+extern unsigned char next_face;
 
-extern void add_point3d(signed short x, signed short y, signed short z);
-extern void add_edge3d(unsigned char p1, unsigned char p2);
+extern signed short x_min;
+extern signed short x_max;
+extern signed short y_min;
+extern signed short y_max;
+extern signed short z_min;
+extern signed short z_max;
+
+extern void add_point3d(unsigned char o, signed short x, signed short y, signed short z, unsigned char face1, unsigned char face2, unsigned char face3, unsigned char face4);
+extern void add_edge3d(unsigned char o, unsigned char p1, unsigned char p2);
+extern void add_face3d(unsigned char o, signed char x, signed char y, signed char z);
+extern void scaleObjectDivide(unsigned char o, unsigned char divisor);
 extern void render_objects();
+
+#define VERTEX(x, y, z, face1, face2, face3, face4, visibility) add_point3d(next_object, x, y, z, face1, face2, face3, face4);
+#define EDGE(v1, v2, face1, face2, visibility) add_edge3d(next_object, v1, v2);
+#define FACE(normal_x, normal_y, normal_z, visibility) add_face3d(next_object, normal_x, normal_y, normal_z);
 
 #endif

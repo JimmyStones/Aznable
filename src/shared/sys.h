@@ -31,7 +31,7 @@
 unsigned char __at(0x8000) input0;
 unsigned char __at(0x8001) video_ctl;		// 0=sprite layer priority over charmap
 unsigned char __at(0x8002) timestamp[5];
-unsigned char __at(0x8022) timer[2];
+unsigned char __at(0x802A) timer[2];
 unsigned char __at(0x803A) joystick[24];
 unsigned char __at(0x80FA) analog_l[12];
 unsigned char __at(0x815A) analog_r[12];

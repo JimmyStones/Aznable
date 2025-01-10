@@ -38,11 +38,11 @@ unsigned char input_speed = 1;
 signed char rot_timer_x;
 signed char rot_timer_y;
 signed char rot_timer_z;
-signed char rot_speed_x = 0;
+signed char rot_speed_x = 1;
 signed char rot_speed_y = 4;
 signed char rot_speed_z = 0;
-signed short rot_pos_x;
-signed short rot_pos_y;
+signed short rot_pos_x = 320;
+signed short rot_pos_y = 50;
 signed short rot_pos_z;
 signed char rot_timer_max = 4;
 
@@ -67,6 +67,12 @@ void handle_inputs()
 													: 0);
 }
 
+unsigned char first_face_index;
+unsigned char last_face_index;
+unsigned char first_point_index;
+unsigned char last_point_index;
+unsigned char next_face_point;
+
 void app_main()
 {
 	chram_size = chram_cols * chram_rows;
@@ -89,15 +95,85 @@ void app_main()
 
 	object_firstpoint[next_object] = next_point;
 	object_firstedge[next_object] = next_edge;
+	object_firstface[next_object] = next_face;
 	object_pos_x[next_object] = 0;
 	object_pos_y[next_object] = 0;
 	object_pos_z[next_object] = 0;
 	object_rot_x[next_object] = 0;
 	object_rot_y[next_object] = 0;
 	object_rot_z[next_object] = 0;
-	generate_box(24, 48, 32);
+	// generate_box(32, 32, 32);
+	generate_sidewinder();
 	object_points[next_object] = next_point - object_firstpoint[next_object];
 	object_edges[next_object] = next_edge - object_firstedge[next_object];
+	object_faces[next_object] = next_face - object_firstface[next_object];
+
+	scaleObjectDivide(next_object, 2);
+
+	// first_point_index = object_firstpoint[next_object];
+	// last_point_index = first_point_index + object_points[next_object];
+	// first_face_index = object_firstface[next_object];
+	// last_face_index = first_face_index + object_faces[next_object];
+	// for (unsigned char f = first_face_index; f < last_face_index; f++)
+	// {
+	// 	signed short nx = face_normal_x[f] / 4;
+	// 	signed short ny = face_normal_y[f] / 4;
+	// 	signed short nz = face_normal_z[f] / 4;
+	// 	unsigned char face_points[4] = {0, 0, 0, 0};
+	// 	next_face_point = 0;
+	// 	for (unsigned char p = first_point_index; p < last_point_index; p++)
+	// 	{
+	// 		if (point_face1[p] == f)
+	// 		{
+	// 			face_points[next_face_point] = p;
+	// 			next_face_point++;
+	// 		}
+	// 		if (point_face2[p] == f)
+	// 		{
+	// 			face_points[next_face_point] = p;
+	// 			next_face_point++;
+	// 		}
+	// 		if (point_face3[p] == f)
+	// 		{
+	// 			face_points[next_face_point] = p;
+	// 			next_face_point++;
+	// 		}
+	// 		if (point_face4[p] == f)
+	// 		{
+	// 			face_points[next_face_point] = p;
+	// 			next_face_point++;
+	// 		}
+	// 	}
+	// 	signed short c_x = 0;
+	// 	signed short c_y = 0;
+	// 	signed short c_z = 0;
+	// 	unsigned char lfp = next_face_point - 1;
+	// 	// write_stringf("f=%d", colour_cga_white, 0, f, f);
+	// 	// write_stringf("lf=%d", colour_cga_white, 4, f, last_face_index);
+	// 	// write_stringf("p1=%d", colour_cga_white, 11, f, face_points[0]);
+	// 	// write_stringf("p2=%d", colour_cga_white, 16, f, face_points[1]);
+	// 	// write_stringf("p3=%d", colour_cga_white, 21, f, face_points[2]);
+	// 	// write_stringf("p4=%d", colour_cga_white, 26, f, face_points[3]);
+	// 	// write_stringf("lfp=%d", colour_cga_white, 31, f, lfp);
+	// 	for (int ffp = 0; ffp <= lfp; ffp++)
+	// 	{
+	// 		unsigned char fpi = face_points[ffp];
+	// 		c_x += point_x[fpi];
+	// 		c_y += point_y[fpi];
+	// 		c_z += point_z[fpi];
+	// 	}
+	// 	c_x /= lfp;
+	// 	c_y /= lfp;
+	// 	c_z /= lfp;
+
+	// 	add_point3d(next_object, c_x, c_y, c_z, 0, 0, 0, 0);
+	// 	add_point3d(next_object, c_x + nx, c_y + ny, c_z + nz, 0, 0, 0, 0);
+	// 	add_edge3d(next_object, next_point - 2, next_point - 1);
+	// }
+
+	// object_points[next_object] = next_point - object_firstpoint[next_object];
+	// object_edges[next_object] = next_edge - object_firstedge[next_object];
+	// object_faces[next_object] = next_face - object_firstface[next_object];
 	// next_object++;
 
 	// object_firstpoint[next_object] = next_point;
@@ -112,9 +188,13 @@ void app_main()
 	// object_points[next_object] = next_point - object_firstpoint[next_object];
 	// object_edges[next_object] = next_edge - object_firstedge[next_object];
 
-	unsigned char pd = 0;
-
 	vector_address_offset = vector_address;
+
+	timer[0] = 0;
+	render_objects();
+	timer[1] = 0;
+
+	unsigned char pd = 0;
 
 	while (1)
 	{
@@ -172,21 +252,21 @@ void app_main()
 			object_rot_y[0] = rot_pos_y / 5;
 			object_rot_z[0] = rot_pos_z / 5;
 
-			pd++;
-			if (pd >= rot_max)
-			{
-				pd = 0;
-			}
-			object_pos_y[1] = lut_sin_5[pd];
-			object_pos_y[1] = lut_sin_5[pd];
+			// pd++;
+			// if (pd >= rot_max)
+			// {
+			// 	pd = 0;
+			// }
+			// object_pos_y[1] = lut_sin_5[pd];
+			// object_pos_y[1] = lut_sin_5[pd];
 
-			object_rot_x[2] = 71 - object_rot_x[0];
-			object_rot_y[2] = 71 - object_rot_y[0];
-			object_rot_z[2] = 71 - object_rot_z[0];
+			// object_rot_x[2] = 71 - object_rot_x[0];
+			// object_rot_y[2] = 71 - object_rot_y[0];
+			// object_rot_z[2] = 71 - object_rot_z[0];
 
-			timer[0] = 0;
+			// timer[0] = 0;
 			render_objects();
-			timer[0] = 0;
+			// timer[1] = 0;
 		}
 		vblank_last = vblank;
 	}

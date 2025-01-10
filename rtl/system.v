@@ -257,7 +257,24 @@ always @(posedge clk_24) begin
 	//if(tilemapram_cs  && !cpu_wr_n) $display("tilemapram_cs addr=%x addr2=%x wraddr=%x dout=%x", cpu_addr, cpu_addr[TILEMAP_RAM_WIDTH-1:0], tilemapram_addr_wr, cpu_dout);
 	//if(timestamp_cs && !cpu_wr_n) $display("timestamp debug a=%x wr=%x", timestamp_addr[1:0], cpu_dout);
 	//if(timer_cs) $display("timer_cs wr=%b timer=%d addr=%d  frame_time=%d  hcnt=%d  vcnt=%d", ~cpu_wr_n, timer, cpu_addr, frame_timer, hcnt, vcnt);
-	if(timer_cs && ~cpu_wr_n) $display("timer clear @ timer=%d cycle_timer=%d  hcnt=%d  vcnt=%d", timer, cycle_timer, hcnt, vcnt);
+//	if(timer_cs && ~cpu_wr_n) $display("timer clear @ timer=%d cycle_timer=%d  hcnt=%d  vcnt=%d", timer, cycle_timer, hcnt, vcnt);
+end
+
+// Debug timer
+reg [31:0] cycle_timer_start;
+always @(posedge clk_24) begin
+	if(timer_cs && ~cpu_wr_n)
+	begin
+		if(!cpu_addr[0])
+		begin
+			$display("timer clear @ %d  hcnt=%d  vcnt=%d", cycle_timer, hcnt, vcnt);
+			cycle_timer_start = cycle_timer;
+		end
+		else
+		begin
+			$display("timer end @ %d hcnt=%d  vcnt=%d  duration=%d", cycle_timer, hcnt, vcnt, cycle_timer- cycle_timer_start);
+		end
+	end
 end
 
 // ROM data available to CPU

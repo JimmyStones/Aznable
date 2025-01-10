@@ -109,7 +109,6 @@ begin
 			end
 			2:
 			begin
-				//vectorframeram_read_data_in <= (vector_gfx_out > 16) ? (vector_gfx_out << 2) : (vector_gfx_out > 0 ? (vector_gfx_out - 1) : 0);
 				vectorframeram_read_data_in <= vector_gfx_out - (vector_gfx_out/4);
 				//vectorframeram_read_data_in <= 0;
 				vectorframeram_read_wr <= 1;
